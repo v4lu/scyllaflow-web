@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { useWorkspace } from '$lib/api/use-workspace.svelte.js';
-	import { Button } from '$lib/compoentns/ui/button';
+	import { Button } from '$lib/components/ui/button/index.js';
 	import { mode, toggleMode } from 'mode-watcher';
 	let { data } = $props();
 

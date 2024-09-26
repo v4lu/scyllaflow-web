@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Header, Sidebar } from '$lib/compoentns/layout';
+	import { Header, Sidebar } from '$lib/components/layout/index.js';
 	import { sessionStore } from '$lib/store/session.store';
 
 	let { children, data } = $props();

@@ -5,9 +5,9 @@
 	import Icon from '@iconify/svelte';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import Button from '../../../lib/compoentns/ui/button/button.svelte';
-	import { Field } from '../../../lib/compoentns/ui/field';
-	import { Input } from '../../../lib/compoentns/ui/input';
+	import Button from '../../../lib/components/ui/button/button.svelte';
+	import { Field } from '../../../lib/components/ui/field';
+	import { Input } from '../../../lib/components/ui/input';
 
 	let { data } = $props();
 	let togglePassword = $state(false);

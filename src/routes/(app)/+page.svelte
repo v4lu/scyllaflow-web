@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { uploadImage } from '$lib/api';
 	import { useWorkspaces } from '$lib/api/use-workspaces.svelte.js';
-	import { Button } from '$lib/compoentns/ui/button';
-	import { Field } from '$lib/compoentns/ui/field';
-	import { Input } from '$lib/compoentns/ui/input';
-	import { Modal } from '$lib/compoentns/ui/modal';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import { Field } from '$lib/components/ui/field/index.js';
+	import { Input } from '$lib/components/ui/input/index.js';
+	import { Modal } from '$lib/components/ui/modal/index.js';
 	import Icon from '@iconify/svelte';
 
 	let { data } = $props();
