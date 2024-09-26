@@ -1,15 +1,19 @@
 <script lang="ts">
 	import { useWorkspaces } from '$lib/api/use-workspaces.svelte';
+	import { CreateIssue } from '../forms';
 	import { Button } from '../ui/button';
 	import { Dropdown } from '../ui/dropdown';
 
 	type SidebarProps = {
 		authToken: string;
+		slug: string | undefined;
 	};
 
-	let { authToken }: SidebarProps = $props();
-	const { resp } = useWorkspaces(authToken);
+	let { authToken, slug }: SidebarProps = $props();
+	const { resp, findWorkspaceBySlug } = useWorkspaces(authToken);
 	let isWorkspaceDropdownOpen = $state(false);
+	let isCreateIssueModalOpen = $state(true);
+	let workspace = $derived(findWorkspaceBySlug(slug!));
 </script>
 
 <aside
@@ -32,5 +36,13 @@
 				</Button>
 			{/each}
 		</Dropdown>
+		{#if slug && workspace}
+			<Button onclick={() => (isCreateIssueModalOpen = true)}>Create Issue</Button>
+			<CreateIssue
+				{workspace}
+				isOpen={isCreateIssueModalOpen}
+				onClose={() => (isCreateIssueModalOpen = false)}
+			/>
+		{/if}
 	{/if}
 </aside>

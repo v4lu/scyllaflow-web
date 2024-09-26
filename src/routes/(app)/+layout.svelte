@@ -8,6 +8,6 @@
 
 <Header />
 <div class="grid h-[calc(100dvh-64.8px)] flex-1 grid-cols-[260px,1fr]">
-	<Sidebar authToken={data.accessToken} />
+	<Sidebar authToken={data.accessToken} slug={data.slug} />
 	{@render children()}
 </div>

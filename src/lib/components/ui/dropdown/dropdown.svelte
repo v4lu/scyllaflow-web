@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { cn } from '$lib';
+	import type { IconProps } from '$lib/components/icons';
 	import Icon from '@iconify/svelte';
-	import type { Snippet } from 'svelte';
+	import type { Component, Snippet } from 'svelte';
+	import { cubicOut } from 'svelte/easing';
+	import { fade, slide } from 'svelte/transition';
 
 	type Props = {
 		isOpen: boolean;
@@ -12,7 +15,10 @@
 		triggerIconClass?: string;
 		triggerClass?: string;
 		downArrowIcon?: boolean;
+		CustomIcon?: Component<IconProps>;
+		customIconClass?: string;
 	};
+
 	let {
 		triggerText,
 		triggerIcon,
@@ -21,23 +27,21 @@
 		isOpen = $bindable(),
 		class: className,
 		downArrowIcon = false,
+		CustomIcon,
+		customIconClass,
 		children
 	}: Props = $props();
 
-	let btn = $state<HTMLButtonElement>();
+	let btn: HTMLButtonElement;
 
 	function clickOutside(node: HTMLElement) {
 		function handleClick(event: MouseEvent) {
 			if (btn && btn.contains(event?.target as Node)) return;
-
 			if (node && !node.contains(event.target as Node)) {
 				isOpen = false;
 			}
 		}
-
-		// true to use capture phase
 		document.addEventListener('click', handleClick, true);
-
 		return {
 			destroy() {
 				document.removeEventListener('click', handleClick, true);
@@ -50,12 +54,15 @@
 	<button
 		bind:this={btn}
 		type="button"
-		onclick={() => (isOpen = !isOpen)}
+		on:click={() => (isOpen = !isOpen)}
 		class={cn(
 			'flex min-w-[12rem] items-center gap-3 rounded-md border border-border py-2 pl-4 pr-3 text-sm shadow-sm',
 			triggerClass
 		)}
 	>
+		{#if CustomIcon}
+			<CustomIcon class={customIconClass} />
+		{/if}
 		{#if triggerText}
 			<span>{triggerText}</span>
 		{/if}
@@ -76,14 +83,18 @@
 		{/if}
 	</button>
 
-	<div
-		use:clickOutside
-		class={cn(
-			'absolute top-[2.8rem] z-[120] hidden w-full min-w-[12rem] gap-2 overflow-y-auto rounded-md border border-border bg-card p-2 opacity-0',
-			className,
-			isOpen ? ' animate-fade-in grid opacity-100' : 'animate-fade-out opacity-0'
-		)}
-	>
-		{@render children()}
-	</div>
+	{#if isOpen}
+		<div
+			use:clickOutside
+			transition:slide={{ duration: 300, easing: cubicOut }}
+			class={cn(
+				'absolute top-[2.8rem] z-[120] w-full min-w-[12rem] gap-2 overflow-y-auto rounded-md border border-border bg-card p-2',
+				className
+			)}
+		>
+			<div transition:fade={{ duration: 200 }}>
+				{@render children()}
+			</div>
+		</div>
+	{/if}
 </div>

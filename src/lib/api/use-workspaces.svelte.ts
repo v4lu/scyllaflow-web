@@ -19,7 +19,7 @@ export function useWorkspaces(authToken: string) {
 		resp.isLoading = true;
 		try {
 			const response = await api.get<Workspace[]>('workspace').json();
-			resp.workspaces = response ?? [];
+			resp.workspaces = response;
 		} catch (error) {
 			console.error('Error fetching workspaces:', error);
 		}
@@ -42,9 +42,15 @@ export function useWorkspaces(authToken: string) {
 		}
 		resp.isSubbmitingCreateWorkspace = false;
 	}
+
+	function findWorkspaceBySlug(slug: string): Workspace | undefined {
+		return resp.workspaces.find((w) => w.slug === slug);
+	}
+
 	loadWorkspaces();
 
 	return {
+		findWorkspaceBySlug,
 		createWorkspace,
 		resp
 	};
