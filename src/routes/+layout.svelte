@@ -4,7 +4,7 @@
 	import { ModeWatcher } from 'mode-watcher';
 	import { fade } from 'svelte/transition';
 	import '../app.css';
-	import { Toast } from '../compoentns/ui/toast';
+	import { Toast } from '../lib/compoentns/ui/toast';
 	let { children } = $props();
 </script>
 

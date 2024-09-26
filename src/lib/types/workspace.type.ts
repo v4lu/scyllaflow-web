@@ -2,7 +2,7 @@ export type Workspace = {
 	createdAt: string;
 	customId: string;
 	id: number;
-	image: string;
+	image?: string;
 	name: string;
 	role: string;
 	roleId: number;

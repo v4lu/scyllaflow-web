@@ -79,7 +79,7 @@
 	<div
 		use:clickOutside
 		class={cn(
-			'absolute top-[2.8rem] z-[120] hidden max-h-56 w-full min-w-[12rem] gap-2 overflow-y-auto rounded-md border border-border bg-card p-2 opacity-0',
+			'absolute top-[2.8rem] z-[120] hidden w-full min-w-[12rem] gap-2 overflow-y-auto rounded-md border border-border bg-card p-2 opacity-0',
 			className,
 			isOpen ? ' animate-fade-in grid opacity-100' : 'animate-fade-out opacity-0'
 		)}

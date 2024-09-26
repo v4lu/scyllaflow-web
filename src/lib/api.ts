@@ -53,3 +53,39 @@ export async function refreshToken(refresh: string, cognitoId: string): Promise<
 		throw redirect(302, '/sign-in');
 	}
 }
+
+type UploadImageType = {
+	file: File | Blob | null;
+	setImageUrl: (val: string) => void;
+	setImageUploadLoading: (val: boolean) => void;
+	authToken: string;
+};
+
+export async function uploadImage({
+	authToken,
+	file,
+	setImageUploadLoading,
+	setImageUrl
+}: UploadImageType): Promise<void> {
+	setImageUploadLoading(true);
+	const formData = new FormData();
+	if (file) {
+		formData.append('file', file);
+		try {
+			const res = await api
+				.post<{ url: string }>('file/image', {
+					headers: {
+						Authorization: `Bearer ${authToken}`
+					},
+					body: formData
+				})
+				.json();
+
+			setImageUrl(res.url);
+			setImageUploadLoading(false);
+		} catch (error) {
+			//TODO toast
+			console.error(error);
+		}
+	}
+}
