@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { useWorkspace } from '$lib/api/use-workspace.svelte.js';
 	import { Button } from '$lib/components/ui/button/index.js';
+	import { issuesStore, useWorkspaceIssues } from '$lib/store/workspace-issues.store.js';
 	import { mode, toggleMode } from 'mode-watcher';
 	let { data } = $props();
 
 	const { resp } = useWorkspace(data.accessToken, data.workspace!);
 	console.log(resp.workspace);
+	useWorkspaceIssues(data.accessToken, data.slug!);
 </script>
 
 <main class="p-4">
@@ -13,6 +15,11 @@
 		{$mode === 'light' ? 'toggle dark' : 'toggle light'}
 		<span class="sr-only">Toggle theme</span>
 	</Button>
-	<h1>Welcome to {resp.workspace?.name}</h1>
-	<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+	<div class="grid">
+		{#each $issuesStore as { id, title }}
+			<span>
+				{id} - {title}
+			</span>
+		{/each}
+	</div>
 </main>

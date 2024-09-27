@@ -12,7 +12,7 @@
 	let { authToken, slug }: SidebarProps = $props();
 	const { resp, findWorkspaceBySlug } = useWorkspaces(authToken);
 	let isWorkspaceDropdownOpen = $state(false);
-	let isCreateIssueModalOpen = $state(true);
+	let isCreateIssueModalOpen = $state(false);
 	let workspace = $derived(findWorkspaceBySlug(slug!));
 </script>
 
@@ -39,6 +39,7 @@
 		{#if slug && workspace}
 			<Button onclick={() => (isCreateIssueModalOpen = true)}>Create Issue</Button>
 			<CreateIssue
+				{authToken}
 				{workspace}
 				isOpen={isCreateIssueModalOpen}
 				onClose={() => (isCreateIssueModalOpen = false)}

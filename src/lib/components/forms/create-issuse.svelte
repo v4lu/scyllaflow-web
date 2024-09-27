@@ -1,4 +1,9 @@
 <script lang="ts">
+	import {
+		isSubmittingCreateIssueStore,
+		useWorkspaceIssues
+	} from '$lib/store/workspace-issues.store';
+	import type { CreateIssue } from '$lib/types/issue.type';
 	import type { Workspace } from '$lib/types/workspace.type';
 	import Icon from '@iconify/svelte';
 	import { priorityArr, statusArr, type PriorityArrType, type StatusArrType } from '.';
@@ -11,14 +16,31 @@
 		isOpen: boolean;
 		onClose: () => void;
 		workspace: Workspace;
+		authToken: string;
 	};
 
-	let { isOpen, onClose, workspace }: Props = $props();
+	let { isOpen, onClose, workspace, authToken }: Props = $props();
 
 	let isPriorityDropdownOpen = $state(false);
 	let selectedPriority = $state<PriorityArrType>(priorityArr[0]);
 	let isStatusDropdownOpen = $state(false);
 	let selectedStatus = $state<StatusArrType>(statusArr[0]);
+	let title = $state('');
+
+	const { createIssue } = useWorkspaceIssues(authToken, workspace.slug);
+
+	async function handleCreateWorkspace() {
+		const payload: CreateIssue = {
+			title,
+			status: selectedPriority.IconName,
+			priority: selectedPriority.IconName
+		};
+		await createIssue(payload);
+		title = '';
+		selectedPriority = priorityArr[0];
+		selectedStatus = statusArr[0];
+		isOpen = false;
+	}
 </script>
 
 <Modal class="grid gap-2 p-0 md:min-w-[40rem]" {isOpen} {onClose}>
@@ -31,7 +53,7 @@
 		</div>
 	</article>
 	<article class="my-4 px-6">
-		<Input variant="empty" placeholder="What should be done" class="text-xl" />
+		<Input bind:value={title} variant="empty" placeholder="What should be done" class="text-xl" />
 	</article>
 	<article class="flex items-center justify-start gap-2 px-6">
 		<Dropdown
@@ -72,7 +94,7 @@
 					class="flex w-full justify-start px-4 py-0 text-xs font-medium"
 					onclick={() => {
 						selectedStatus = status;
-						isPriorityDropdownOpen = false;
+						isStatusDropdownOpen = false;
 					}}
 				>
 					<status.Icon class="mr-2 size-4" />
@@ -88,6 +110,11 @@
 		<Button size="icon" variant="ghost">
 			<Icon icon="lucide:paperclip" class="size-5" />
 		</Button>
-		<Button size="sm">Create Issue</Button>
+		<Button
+			isLoading={$isSubmittingCreateIssueStore}
+			disabled={$isSubmittingCreateIssueStore}
+			onclick={handleCreateWorkspace}
+			size="sm">Create Issue</Button
+		>
 	</article>
 </Modal>
