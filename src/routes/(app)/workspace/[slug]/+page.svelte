@@ -11,19 +11,23 @@
 		type StatusIconName
 	} from '$lib/store/workspace-issues.store.js';
 
-	export let data;
+	let { data } = $props();
 	const { resp } = useWorkspace(data.accessToken, data.workspace!);
 	useWorkspaceIssues(data.accessToken, data.slug!);
 
-	let isHorizontalView = false;
+	let isHorizontalView = $state(false);
 
-	$: sortedStatusKeys = statusOrder.filter((status) => $groupedIssuesStore[status]?.length > 0);
-	$: issueCountsByStatus = Object.entries($groupedIssuesStore).reduce(
-		(acc, [status, issues]) => {
-			acc[status as StatusIconName] = issues.length;
-			return acc;
-		},
-		{} as Record<StatusIconName, number>
+	let sortedStatusKeys = $derived(
+		statusOrder.filter((status) => $groupedIssuesStore[status]?.length > 0)
+	);
+	let issueCountsByStatus = $derived(
+		Object.entries($groupedIssuesStore).reduce(
+			(acc, [status, issues]) => {
+				acc[status as StatusIconName] = issues.length;
+				return acc;
+			},
+			{} as Record<StatusIconName, number>
+		)
 	);
 
 	function toggleView() {
@@ -40,7 +44,6 @@
 </script>
 
 <main class="">
-	<section class="h-fit w-full border-b border-border"></section>
 	<section class="hi-ft w-full border-b border-border">
 		<div class="flex justify-between px-4 py-2 lg:px-8">
 			<h3 class="text-sm font-medium">Filter</h3>
@@ -51,7 +54,7 @@
 		</div>
 	</section>
 	{#if isHorizontalView}
-		<div class="h-[calc(100dvh-116.8px)] w-[calc(100vw-260px)] overflow-hidden">
+		<div class="h-[calc(100dvh-118px)] w-[calc(100vw-260px)] overflow-hidden">
 			<div class="h-full w-full overflow-x-auto overflow-y-auto">
 				<div class="flex h-full">
 					{#each sortedStatusKeys as status}
@@ -63,7 +66,6 @@
 								{#each $groupedIssuesStore[status] || [] as issue}
 									<div class="w-[30rem] rounded-lg border border-border bg-card p-4 shadow-sm">
 										<div class="flex items-center gap-2">
-											<svelte:component this={getPriorityIcon(issue.priority)} class="size-4" />
 											<p class="text-xs text-muted-foreground">{issue.custom_id}</p>
 										</div>
 										<p class="font-medium">{issue.title}</p>
@@ -76,27 +78,33 @@
 			</div>
 		</div>
 	{:else}
-		<div class="h-[calc(100dvh-116.8px)] overflow-hidden">
+		<div class="h-[calc(100dvh-118px)] overflow-hidden">
 			<div class="h-full overflow-y-auto">
 				{#each sortedStatusKeys as status}
+					{@const IconStatus = getStatusIcon(status)}
+
 					<section class="w-full">
 						<div
 							class="sticky top-0 z-10 flex h-fit w-full items-center justify-start gap-4 bg-accent px-4 py-2 lg:px-8"
 						>
+							<IconStatus class="size-4" />
+
 							<h2 class="text-xs font-medium">
 								{status} ({issueCountsByStatus[status] || 0})
 							</h2>
 						</div>
 						<div>
 							{#each $groupedIssuesStore[status] || [] as issue}
+								{@const IconPriority = getPriorityIcon(issue.priority)}
+								{@const IconStatus = getStatusIcon(issue.status)}
 								<a
 									href="/"
 									class="flex items-center justify-between border-b border-border px-4 py-2 lg:px-8"
 								>
 									<div class="flex items-center justify-center gap-5">
-										<svelte:component this={getPriorityIcon(issue.priority)} class="size-4" />
+										<IconPriority class="size-4" />
 										<p class="text-xs text-muted-foreground">{issue.custom_id}</p>
-										<svelte:component this={getStatusIcon(issue.status)} class="size-4" />
+										<IconStatus class="size-4" />
 										<p class="font-medium">{issue.title}</p>
 									</div>
 									<div>
