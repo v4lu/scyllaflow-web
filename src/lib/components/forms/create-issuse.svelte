@@ -19,7 +19,7 @@
 		authToken: string;
 	};
 
-	let { isOpen, onClose, workspace, authToken }: Props = $props();
+	let { isOpen = $bindable(), onClose, workspace, authToken }: Props = $props();
 
 	let isPriorityDropdownOpen = $state(false);
 	let selectedPriority = $state<PriorityArrType>(priorityArr[0]);
@@ -32,7 +32,7 @@
 	async function handleCreateWorkspace() {
 		const payload: CreateIssue = {
 			title,
-			status: selectedPriority.IconName,
+			status: selectedStatus.IconName,
 			priority: selectedPriority.IconName
 		};
 		await createIssue(payload);
@@ -43,7 +43,7 @@
 	}
 </script>
 
-<Modal class="grid gap-2 p-0 md:min-w-[40rem]" {isOpen} {onClose}>
+<Modal class="grid gap-2 p-0 md:min-w-[40rem]" bind:isOpen {onClose}>
 	<article class="flex w-full items-center justify-between px-6 pt-6">
 		<div class="flex items-center justify-center gap-2">
 			<span class="rounded-md border border-border bg-accent px-1 py-0.5 text-xs">

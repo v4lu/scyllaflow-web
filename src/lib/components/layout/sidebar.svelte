@@ -37,11 +37,16 @@
 			{/each}
 		</Dropdown>
 		{#if slug && workspace}
-			<Button onclick={() => (isCreateIssueModalOpen = true)}>Create Issue</Button>
+			<Button
+				onclick={() => {
+					isCreateIssueModalOpen = true;
+					console.log('jebote');
+				}}>Create Issue</Button
+			>
 			<CreateIssue
 				{authToken}
 				{workspace}
-				isOpen={isCreateIssueModalOpen}
+				bind:isOpen={isCreateIssueModalOpen}
 				onClose={() => (isCreateIssueModalOpen = false)}
 			/>
 		{/if}

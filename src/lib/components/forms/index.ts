@@ -1,11 +1,11 @@
 import type { Component } from 'svelte';
-import { icons, type IconProps } from '../icons';
+import { Icons, type IconProps } from '../icons';
 
 export { default as CreateIssue } from './create-issuse.svelte';
 
-type IconsType = typeof icons;
-type PriorityIconName = keyof IconsType['priority'];
-type StatusIconName = keyof IconsType['status'];
+type IconsType = typeof Icons;
+export type PriorityIconName = keyof IconsType['priority'];
+export type StatusIconName = keyof IconsType['status'];
 
 export type PriorityArrType = {
 	IconName: PriorityIconName;
@@ -18,18 +18,18 @@ export type StatusArrType = {
 };
 
 export const priorityArr: PriorityArrType[] = [
-	{ IconName: 'Low', Icon: icons.priority.Low },
-	{ IconName: 'Medium', Icon: icons.priority.Medium },
-	{ IconName: 'High', Icon: icons.priority.High },
-	{ IconName: 'Urgent', Icon: icons.priority.Urgent }
+	{ IconName: 'Low', Icon: Icons.priority.Low },
+	{ IconName: 'Medium', Icon: Icons.priority.Medium },
+	{ IconName: 'High', Icon: Icons.priority.High },
+	{ IconName: 'Urgent', Icon: Icons.priority.Urgent }
 ];
 
 export const statusArr: StatusArrType[] = [
-	{ IconName: 'Backlog', Icon: icons.status.Backlog },
-	{ IconName: 'Todo', Icon: icons.status.Todo },
-	{ IconName: 'InProgress', Icon: icons.status.InProgress },
-	{ IconName: 'Check', Icon: icons.status.Check },
-	{ IconName: 'Done', Icon: icons.status.Done },
-	{ IconName: 'Cancelled', Icon: icons.status.Cancelled },
-	{ IconName: 'Blocked', Icon: icons.status.Blocked }
+	{ IconName: 'Backlog', Icon: Icons.status.Backlog },
+	{ IconName: 'Todo', Icon: Icons.status.Todo },
+	{ IconName: 'InProgress', Icon: Icons.status.InProgress },
+	{ IconName: 'Check', Icon: Icons.status.Check },
+	{ IconName: 'Done', Icon: Icons.status.Done },
+	{ IconName: 'Cancelled', Icon: Icons.status.Cancelled },
+	{ IconName: 'Blocked', Icon: Icons.status.Blocked }
 ];

@@ -3,8 +3,8 @@ export type Issue = {
 	custom_id: string;
 	createdAt: string;
 	title: string;
-	status: string;
-	priority: string;
+	status: 'Backlog' | 'Todo' | 'InProgress' | 'Check' | 'Done' | 'Cancelled' | 'Blocked';
+	priority: 'Low' | 'Medium' | 'High' | 'Urgent';
 	dueDate: string;
 	version: number;
 	workspace_id: number;

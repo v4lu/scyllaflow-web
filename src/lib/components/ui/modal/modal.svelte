@@ -11,7 +11,7 @@
 		isOpen: boolean;
 	};
 
-	let { onClose, children, class: className, isOpen }: ModalProps = $props();
+	let { onClose, children, class: className, isOpen = $bindable() }: ModalProps = $props();
 	let modalContent = $state<HTMLDivElement>();
 
 	function handleOutsideClick(event: MouseEvent) {

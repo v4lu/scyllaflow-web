@@ -18,7 +18,7 @@ export type IconProps = {
 	class?: string;
 } & Partial<SVGSVGElement>;
 
-export const icons = {
+export const Icons = {
 	priority: {
 		Low,
 		Medium,
