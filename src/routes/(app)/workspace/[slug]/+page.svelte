@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { monthAndDay } from '$lib';
+	import { cn, formatDateOrDefault, isPastToday, monthAndDay } from '$lib';
 	import { useWorkspace } from '$lib/api/use-workspace.svelte.js';
 	import { Icons } from '$lib/components/icons/index.js';
 	import { Button } from '$lib/components/ui/button';
@@ -108,7 +108,14 @@
 										<p class="font-medium">{issue.title}</p>
 									</div>
 									<div>
-										<p class="text-xs text-muted-foreground">
+										<p
+											class={cn(
+												'text-xs font-semibold text-muted-foreground',
+												formatDateOrDefault(issue.dueDate) !== '-' &&
+													isPastToday(issue.dueDate) &&
+													'text-destructive'
+											)}
+										>
 											{issue.dueDate ? monthAndDay(issue.dueDate) : '-'}
 										</p>
 									</div>

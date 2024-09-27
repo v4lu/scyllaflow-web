@@ -16,9 +16,7 @@
 	let workspace = $derived(findWorkspaceBySlug(slug!));
 </script>
 
-<aside
-	class="hidden w-[260px] content-start gap-4 border-r border-border px-6 py-6 shadow-md md:grid"
->
+<aside class="hidden w-[260px] content-start gap-4 border-r border-border px-6 py-6 md:grid">
 	{#if resp.isLoading}
 		<p>Loading..</p>
 	{:else if resp.workspaces.length > 0}

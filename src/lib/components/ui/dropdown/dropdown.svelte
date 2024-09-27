@@ -17,6 +17,7 @@
 		downArrowIcon?: boolean;
 		CustomIcon?: Component<IconProps>;
 		customIconClass?: string;
+		triggerIconPosition?: 'left' | 'right';
 	};
 
 	let {
@@ -29,6 +30,7 @@
 		downArrowIcon = false,
 		CustomIcon,
 		customIconClass,
+		triggerIconPosition = 'right',
 		children
 	}: Props = $props();
 
@@ -54,7 +56,7 @@
 	<button
 		bind:this={btn}
 		type="button"
-		on:click={() => (isOpen = !isOpen)}
+		onclick={() => (isOpen = !isOpen)}
 		class={cn(
 			'flex min-w-[12rem] items-center gap-3 rounded-md border border-border py-2 pl-4 pr-3 text-sm shadow-sm',
 			triggerClass
@@ -62,6 +64,9 @@
 	>
 		{#if CustomIcon}
 			<CustomIcon class={customIconClass} />
+		{/if}
+		{#if !downArrowIcon && triggerIcon && triggerIconPosition === 'left'}
+			<Icon icon={triggerIcon} class={cn('ml-auto size-4', triggerIconClass)} />
 		{/if}
 		{#if triggerText}
 			<span>{triggerText}</span>
@@ -78,7 +83,7 @@
 				)}
 			/>
 		{/if}
-		{#if !downArrowIcon && triggerIcon}
+		{#if !downArrowIcon && triggerIcon && triggerIconPosition === 'right'}
 			<Icon icon={triggerIcon} class={cn('ml-auto size-4', triggerIconClass)} />
 		{/if}
 	</button>

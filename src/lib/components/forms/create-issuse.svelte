@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { getSelectedDateLabel } from '$lib';
 	import {
 		isSubmittingCreateIssueStore,
 		useWorkspaceIssues
@@ -8,6 +9,7 @@
 	import Icon from '@iconify/svelte';
 	import { priorityArr, statusArr, type PriorityArrType, type StatusArrType } from '.';
 	import { Button } from '../ui/button';
+	import { DatePicker } from '../ui/date-picker';
 	import { Dropdown } from '../ui/dropdown';
 	import { Input } from '../ui/input';
 	import { Modal } from '../ui/modal';
@@ -25,15 +27,23 @@
 	let selectedPriority = $state<PriorityArrType>(priorityArr[0]);
 	let isStatusDropdownOpen = $state(false);
 	let selectedStatus = $state<StatusArrType>(statusArr[0]);
+	let isDatePickerOpen = $state(false);
+	let selectedDate = $state<Date | null>(null);
 	let title = $state('');
 
 	const { createIssue } = useWorkspaceIssues(authToken, workspace.slug);
+
+	function handleDateSelect(date: Date | null) {
+		selectedDate = date;
+		isDatePickerOpen = false;
+	}
 
 	async function handleCreateWorkspace() {
 		const payload: CreateIssue = {
 			title,
 			status: selectedStatus.IconName,
-			priority: selectedPriority.IconName
+			priority: selectedPriority.IconName,
+			dueDate: selectedDate
 		};
 		await createIssue(payload);
 		title = '';
@@ -102,9 +112,17 @@
 				</Button>
 			{/each}
 		</Dropdown>
-		<Button size="icon" variant="ghost">
-			<Icon icon="lucide:paperclip" class="size-4" />
-		</Button>
+		<Dropdown
+			triggerIconPosition="left"
+			triggerIcon="solar:calendar-bold"
+			triggerIconClass="mr-2"
+			triggerClass="px-2 py-1 gap-0 w-fit min-w-fit text-xs font-medium"
+			triggerText={selectedDate ? getSelectedDateLabel(selectedDate) : 'Select due date'}
+			bind:isOpen={isDatePickerOpen}
+			class="top-[2rem] min-w-[20rem]"
+		>
+			<DatePicker selected={selectedDate} selectDate={handleDateSelect} />
+		</Dropdown>
 	</article>
 	<article class="flex items-center justify-between border-t border-border px-6 py-3">
 		<Button size="icon" variant="ghost">
