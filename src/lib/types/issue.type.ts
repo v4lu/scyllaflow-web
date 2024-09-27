@@ -15,4 +15,5 @@ export type CreateIssue = {
 	priority: string;
 	status: string;
 	dueDate: Date | null;
+	description: Object;
 };

@@ -11,9 +11,9 @@
 	import { Button } from '../ui/button';
 	import { DatePicker } from '../ui/date-picker';
 	import { Dropdown } from '../ui/dropdown';
+	import { Editor } from '../ui/editor';
 	import { Input } from '../ui/input';
 	import { Modal } from '../ui/modal';
-
 	type Props = {
 		isOpen: boolean;
 		onClose: () => void;
@@ -30,6 +30,7 @@
 	let isDatePickerOpen = $state(false);
 	let selectedDate = $state<Date | null>(null);
 	let title = $state('');
+	let description = $state<object>({});
 
 	const { createIssue } = useWorkspaceIssues(authToken, workspace.slug);
 
@@ -38,15 +39,21 @@
 		isDatePickerOpen = false;
 	}
 
+	function handleDescriptionUpdate(content: object) {
+		description = content;
+	}
+
 	async function handleCreateWorkspace() {
 		const payload: CreateIssue = {
 			title,
+			description: JSON.stringify(description),
 			status: selectedStatus.IconName,
 			priority: selectedPriority.IconName,
 			dueDate: selectedDate
 		};
 		await createIssue(payload);
 		title = '';
+		description = {};
 		selectedPriority = priorityArr[0];
 		selectedStatus = statusArr[0];
 		isOpen = false;
@@ -64,6 +71,11 @@
 	</article>
 	<article class="my-4 px-6">
 		<Input bind:value={title} variant="empty" placeholder="What should be done" class="text-xl" />
+		<Editor
+			content={description}
+			update={handleDescriptionUpdate}
+			placeholder="Add a description..."
+		/>
 	</article>
 	<article class="flex items-center justify-start gap-2 px-6">
 		<Dropdown
