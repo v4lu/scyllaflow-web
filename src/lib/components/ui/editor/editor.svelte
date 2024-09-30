@@ -83,7 +83,7 @@
 					emptyEditorClass: 'is-editor-empty'
 				})
 			],
-			content: content,
+			content: content || '',
 			editorProps: {
 				attributes: {
 					class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none p-4'

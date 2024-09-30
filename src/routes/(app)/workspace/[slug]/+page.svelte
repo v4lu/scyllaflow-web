@@ -54,7 +54,7 @@
 		</div>
 	</section>
 	{#if isHorizontalView}
-		<div class="h-[calc(100dvh-118px)] w-[calc(100vw-260px)] overflow-hidden">
+		<div class="h-[calc(100dvh-130px)] w-[calc(100vw-260px)] overflow-hidden">
 			<div class="h-full w-full overflow-x-auto overflow-y-auto">
 				<div class="flex h-full">
 					{#each sortedStatusKeys as status}
@@ -78,7 +78,7 @@
 			</div>
 		</div>
 	{:else}
-		<div class="h-[calc(100dvh-118px)] overflow-hidden">
+		<div class="h-[calc(100dvh-130px)] overflow-hidden">
 			<div class="h-full overflow-y-auto">
 				{#each sortedStatusKeys as status}
 					{@const IconStatus = getStatusIcon(status)}
@@ -98,7 +98,7 @@
 								{@const IconPriority = getPriorityIcon(issue.priority)}
 								{@const IconStatus = getStatusIcon(issue.status)}
 								<a
-									href="/"
+									href={`/workspace/${data.slug}/issue/${issue.id}`}
 									class="flex items-center justify-between border-b border-border px-4 py-2 lg:px-8"
 								>
 									<div class="flex items-center justify-center gap-5">

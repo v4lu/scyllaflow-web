@@ -3,6 +3,7 @@ export type Issue = {
 	custom_id: string;
 	createdAt: string;
 	title: string;
+	description?: string;
 	status: 'Backlog' | 'Todo' | 'InProgress' | 'Check' | 'Done' | 'Cancelled' | 'Blocked';
 	priority: 'Low' | 'Medium' | 'High' | 'Urgent';
 	dueDate: string;
