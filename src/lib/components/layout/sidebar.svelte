@@ -38,7 +38,6 @@
 			<Button
 				onclick={() => {
 					isCreateIssueModalOpen = true;
-					console.log('jebote');
 				}}>Create Issue</Button
 			>
 			<CreateIssue

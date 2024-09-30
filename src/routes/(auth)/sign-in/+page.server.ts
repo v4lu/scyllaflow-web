@@ -40,7 +40,6 @@ export const actions = {
 					json: payload
 				})
 				.json();
-			console.log(res);
 			const {
 				access_token,
 				access_token_expiry,
@@ -59,7 +58,6 @@ export const actions = {
 			if (error instanceof HTTPError) {
 				if (error.response.status === 401) {
 					const res = await error.response.json();
-					console.log(res);
 					return setError(form, `CREDENTIALS: ${res.message}`);
 				}
 				return setError(form, 'SERVER: There is currently server issues, please try again later.');

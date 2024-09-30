@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Editor, type ChainedCommands } from '@tiptap/core';
+	import Image from '@tiptap/extension-image';
 	import Placeholder from '@tiptap/extension-placeholder';
 	import Table from '@tiptap/extension-table';
 	import TableCell from '@tiptap/extension-table-cell';
@@ -18,7 +19,7 @@
 
 	let { content, placeholder, update }: Props = $props();
 	let element = $state<HTMLElement>();
-	let editor = $state<Editor>();
+	let editor = $state<Editor | null>(null);
 	let showCommandMenu = $state(false);
 	let commandMenuPosition = $state({ x: 0, y: 0 });
 	let dropdownElement = $state<HTMLDivElement>();
@@ -27,18 +28,46 @@
 	let inputElement = $state<HTMLInputElement>();
 	let selectedIndex = $state(0);
 
-	const formatMethods = {
-		Bold: (chain: ChainedCommands) => chain.toggleBold(),
-		Italic: (chain: ChainedCommands) => chain.toggleItalic(),
-		BulletList: (chain: ChainedCommands) => chain.toggleBulletList(),
-		OrderedList: (chain: ChainedCommands) => chain.toggleOrderedList(),
-		H1: (chain: ChainedCommands) => chain.toggleHeading({ level: 1 }),
-		H2: (chain: ChainedCommands) => chain.toggleHeading({ level: 2 }),
-		H3: (chain: ChainedCommands) => chain.toggleHeading({ level: 3 }),
-		Table: (chain: ChainedCommands) => chain.insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-	} as const;
+	type FormatMethod =
+		| { type: 'chain'; method: (chain: ChainedCommands) => ChainedCommands }
+		| { type: 'action'; method: () => void };
 
-	type FormatMethod = keyof typeof formatMethods;
+	const formatMethods: Record<string, FormatMethod> = {
+		Bold: { type: 'chain', method: (chain: ChainedCommands) => chain.toggleBold() },
+		Italic: { type: 'chain', method: (chain: ChainedCommands) => chain.toggleItalic() },
+		BulletList: { type: 'chain', method: (chain: ChainedCommands) => chain.toggleBulletList() },
+		OrderedList: { type: 'chain', method: (chain: ChainedCommands) => chain.toggleOrderedList() },
+		H1: { type: 'chain', method: (chain: ChainedCommands) => chain.toggleHeading({ level: 1 }) },
+		H2: { type: 'chain', method: (chain: ChainedCommands) => chain.toggleHeading({ level: 2 }) },
+		H3: { type: 'chain', method: (chain: ChainedCommands) => chain.toggleHeading({ level: 3 }) },
+		Table: {
+			type: 'chain',
+			method: (chain: ChainedCommands) =>
+				chain.insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+		},
+		Image: { type: 'action', method: handleImageUpload }
+	};
+
+	function handleImageUpload() {
+		const input = document.createElement('input');
+		input.type = 'file';
+		input.accept = 'image/*';
+		input.onchange = (event) => {
+			const file = (event.target as HTMLInputElement).files?.[0];
+			if (file) {
+				const reader = new FileReader();
+				reader.onload = (e) => {
+					const result = e.target?.result;
+					if (typeof result === 'string' && editor) {
+						editor.chain().focus().setImage({ src: result }).run();
+					}
+				};
+				reader.readAsDataURL(file);
+			}
+		};
+		input.click();
+	}
+
 	onMount(() => {
 		editor = new Editor({
 			element: element,
@@ -48,6 +77,7 @@
 				TableRow,
 				TableHeader,
 				TableCell,
+				Image,
 				Placeholder.configure({
 					placeholder: placeholder,
 					emptyEditorClass: 'is-editor-empty'
@@ -100,7 +130,7 @@
 					break;
 				case 'Enter':
 					event.preventDefault();
-					handleCommand(filteredCommands[selectedIndex] as FormatMethod);
+					handleCommand(filteredCommands[selectedIndex]);
 					closeCommandMenu();
 					break;
 				case 'Escape':
@@ -112,8 +142,7 @@
 	}
 
 	function openCommandMenu() {
-		if (!element) return;
-		if (!editor) return;
+		if (!element || !editor) return;
 		const { from } = editor.state.selection;
 		const coords = editor.view.coordsAtPos(from);
 		const editorRect = element.getBoundingClientRect();
@@ -139,10 +168,16 @@
 		}
 	}
 
-	function handleCommand(command: FormatMethod) {
-		const method = formatMethods[command];
+	function handleCommand(command: string) {
 		if (!editor) return;
-		method(editor.chain().focus()).run();
+		const method = formatMethods[command];
+		if (method) {
+			if (method.type === 'chain') {
+				method.method(editor.chain().focus()).run();
+			} else {
+				method.method();
+			}
+		}
 	}
 
 	function handleInputChange(event: Event) {
@@ -160,7 +195,7 @@
 	{#if showCommandMenu}
 		<div
 			bind:this={dropdownElement}
-			class="absolute rounded-md border border-border bg-card p-2 shadow-lg"
+			class="absolute z-[30] rounded-md border border-border bg-card p-2 shadow-lg"
 			style="left: {commandMenuPosition.x}px; top: {commandMenuPosition.y}px;"
 		>
 			<input
@@ -178,7 +213,7 @@
 						size="sm"
 						class="mb-2 mr-2"
 						onclick={() => {
-							handleCommand(format as FormatMethod);
+							handleCommand(format);
 							closeCommandMenu();
 						}}
 					>

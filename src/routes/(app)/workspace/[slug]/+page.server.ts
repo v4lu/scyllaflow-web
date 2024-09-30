@@ -22,7 +22,6 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
 		};
 	} catch (e) {
 		const err = e as HTTPError;
-		console.log(err.response.status);
 		if (err.response.status === 404) {
 			throw redirect(307, '/');
 		}

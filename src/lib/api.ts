@@ -38,7 +38,6 @@ export function createAuthHeaders(token: string): Headers {
 }
 
 export async function refreshToken(refresh: string, cognitoId: string): Promise<RefreshResponse> {
-	console.log({ refreshToken, cognitoId });
 	try {
 		const res = await ky
 			.post<RefreshResponse>(`${getBaseUrl()}/auth/refresh?id=${cognitoId}`, {
