@@ -7,6 +7,8 @@
 	import TableRow from '@tiptap/extension-table-row';
 	import StarterKit from '@tiptap/starter-kit';
 	import { onDestroy, onMount } from 'svelte';
+	import { Button } from '../button';
+	import { inputVariants } from '../input';
 
 	type Props = {
 		content: object;
@@ -17,24 +19,32 @@
 	let { content, placeholder, update }: Props = $props();
 	let element = $state<HTMLElement>();
 	let editor = $state<Editor>();
+	let showCommandMenu = $state(false);
+	let commandMenuPosition = $state({ x: 0, y: 0 });
+	let dropdownElement = $state<HTMLDivElement>();
+	let commandInput = $state('');
+	let filteredCommands = $state<string[]>([]);
+	let inputElement = $state<HTMLInputElement>();
+	let selectedIndex = $state(0);
 
 	const formatMethods = {
 		Bold: (chain: ChainedCommands) => chain.toggleBold(),
 		Italic: (chain: ChainedCommands) => chain.toggleItalic(),
 		BulletList: (chain: ChainedCommands) => chain.toggleBulletList(),
-		OrderedList: (chain: ChainedCommands) => chain.toggleOrderedList()
+		OrderedList: (chain: ChainedCommands) => chain.toggleOrderedList(),
+		H1: (chain: ChainedCommands) => chain.toggleHeading({ level: 1 }),
+		H2: (chain: ChainedCommands) => chain.toggleHeading({ level: 2 }),
+		H3: (chain: ChainedCommands) => chain.toggleHeading({ level: 3 }),
+		Table: (chain: ChainedCommands) => chain.insertTable({ rows: 3, cols: 3, withHeaderRow: true })
 	} as const;
 
 	type FormatMethod = keyof typeof formatMethods;
-
 	onMount(() => {
 		editor = new Editor({
 			element: element,
 			extensions: [
 				StarterKit,
-				Table.configure({
-					resizable: true
-				}),
+				Table.configure({ resizable: true }),
 				TableRow,
 				TableHeader,
 				TableCell,
@@ -54,63 +64,124 @@
 				update(json);
 			}
 		});
+		if (!element) return;
+		document.addEventListener('keydown', handleKeyDown);
+		document.addEventListener('click', handleClickOutside);
 	});
 
 	onDestroy(() => {
 		if (editor) {
 			editor.destroy();
 		}
+		document.removeEventListener('keydown', handleKeyDown);
+		document.removeEventListener('click', handleClickOutside);
 	});
 
-	function toggleFormat(format: FormatMethod) {
-		const method = formatMethods[format];
+	$effect(() => {
+		if (showCommandMenu && inputElement) {
+			inputElement.focus();
+		}
+	});
+
+	function handleKeyDown(event: KeyboardEvent) {
+		if (!editor) return;
+		if (event.altKey && event.key === 'i') {
+			event.preventDefault();
+			openCommandMenu();
+		} else if (showCommandMenu) {
+			event.preventDefault();
+			switch (event.key) {
+				case 'ArrowDown':
+					selectedIndex = (selectedIndex + 1) % filteredCommands.length;
+					break;
+				case 'ArrowUp':
+					selectedIndex = (selectedIndex - 1 + filteredCommands.length) % filteredCommands.length;
+					break;
+				case 'Enter':
+					handleCommand(filteredCommands[selectedIndex] as FormatMethod);
+					closeCommandMenu();
+					break;
+				case 'Escape':
+					closeCommandMenu();
+					break;
+			}
+		}
+	}
+
+	function openCommandMenu() {
+		if (!element) return;
+		if (!editor) return;
+		const { from } = editor.state.selection;
+		const coords = editor.view.coordsAtPos(from);
+		const editorRect = element.getBoundingClientRect();
+		showCommandMenu = true;
+		commandMenuPosition = {
+			x: coords.left - editorRect.left,
+			y: coords.bottom - editorRect.top
+		};
+		commandInput = '';
+		filteredCommands = Object.keys(formatMethods);
+		selectedIndex = 0;
+	}
+
+	function closeCommandMenu() {
+		if (!editor) return;
+		showCommandMenu = false;
+		editor.commands.focus();
+	}
+
+	function handleClickOutside(event: MouseEvent) {
+		if (dropdownElement && !dropdownElement.contains(event.target as Node)) {
+			closeCommandMenu();
+		}
+	}
+
+	function handleCommand(command: FormatMethod) {
+		const method = formatMethods[command];
 		if (!editor) return;
 		method(editor.chain().focus()).run();
 	}
 
-	function setHeading(level: 1 | 2 | 3) {
-		if (!editor) return;
-		editor.chain().focus().toggleHeading({ level }).run();
-	}
-
-	function insertTable() {
-		if (!editor) return;
-		editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+	function handleInputChange(event: Event) {
+		const input = (event.target as HTMLInputElement).value.toLowerCase();
+		commandInput = input;
+		filteredCommands = Object.keys(formatMethods).filter((cmd) =>
+			cmd.toLowerCase().includes(input)
+		);
+		selectedIndex = 0;
 	}
 </script>
 
-<div class="rich-text-editor rounded-md border border-gray-300">
+<div class="rich-text-editor relative">
 	<div bind:this={element} class="min-h-[200px]"></div>
-	<div class="flex flex-wrap gap-2 border-t border-gray-300 p-2">
-		<button
-			onclick={() => toggleFormat('Bold')}
-			class="rounded px-2 py-1 text-sm font-medium hover:bg-gray-100">B</button
+	{#if showCommandMenu}
+		<div
+			bind:this={dropdownElement}
+			class="absolute rounded-md border border-border bg-card p-2 shadow-lg"
+			style="left: {commandMenuPosition.x}px; top: {commandMenuPosition.y}px;"
 		>
-		<button
-			onclick={() => toggleFormat('Italic')}
-			class="rounded px-2 py-1 text-sm font-medium italic hover:bg-gray-100">I</button
-		>
-		<button
-			onclick={() => setHeading(1)}
-			class="rounded px-2 py-1 text-sm font-bold hover:bg-gray-100">H1</button
-		>
-		<button
-			onclick={() => setHeading(2)}
-			class="rounded px-2 py-1 text-sm font-semibold hover:bg-gray-100">H2</button
-		>
-		<button onclick={() => setHeading(3)} class="rounded px-2 py-1 text-sm hover:bg-gray-100"
-			>H3</button
-		>
-		<button
-			onclick={() => toggleFormat('BulletList')}
-			class="rounded px-2 py-1 text-sm hover:bg-gray-100">• List</button
-		>
-		<button
-			onclick={() => toggleFormat('OrderedList')}
-			class="rounded px-2 py-1 text-sm hover:bg-gray-100">1. List</button
-		>
-		<button onclick={insertTable} class="rounded px-2 py-1 text-sm hover:bg-gray-100">Table</button>
-	</div>
+			<input
+				bind:this={inputElement}
+				type="text"
+				placeholder="Type a command..."
+				value={commandInput}
+				oninput={handleInputChange}
+				class={inputVariants({ variant: 'empty' })}
+			/>
+			{#each filteredCommands as format, index}
+				<Button
+					variant={index === selectedIndex ? 'secondary' : 'ghost'}
+					size="sm"
+					onclick={() => {
+						handleCommand(format as FormatMethod);
+						closeCommandMenu();
+					}}
+				>
+					{format}
+				</Button>
+			{/each}
+		</div>
+	{/if}
 </div>
 
 <style lang="postcss">
@@ -118,7 +189,7 @@
 		@apply min-h-[200px] outline-none;
 	}
 	:global(.ProseMirror p.is-editor-empty:first-child::before) {
-		@apply pointer-events-none float-left h-0 text-gray-400;
+		@apply pointer-events-none float-left h-0 text-muted-foreground;
 		content: attr(data-placeholder);
 	}
 	:global(.ProseMirror table) {
