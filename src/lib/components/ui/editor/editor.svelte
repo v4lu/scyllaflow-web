@@ -88,20 +88,23 @@
 		if (event.altKey && event.key === 'i') {
 			event.preventDefault();
 			openCommandMenu();
-		} else if (showCommandMenu) {
-			event.preventDefault();
+		} else if (showCommandMenu && event.target === inputElement) {
 			switch (event.key) {
-				case 'ArrowDown':
-					selectedIndex = (selectedIndex + 1) % filteredCommands.length;
-					break;
-				case 'ArrowUp':
+				case 'ArrowLeft':
+					event.preventDefault();
 					selectedIndex = (selectedIndex - 1 + filteredCommands.length) % filteredCommands.length;
 					break;
+				case 'ArrowRight':
+					event.preventDefault();
+					selectedIndex = (selectedIndex + 1) % filteredCommands.length;
+					break;
 				case 'Enter':
+					event.preventDefault();
 					handleCommand(filteredCommands[selectedIndex] as FormatMethod);
 					closeCommandMenu();
 					break;
 				case 'Escape':
+					event.preventDefault();
 					closeCommandMenu();
 					break;
 			}
@@ -164,22 +167,25 @@
 				bind:this={inputElement}
 				type="text"
 				placeholder="Type a command..."
-				value={commandInput}
+				bind:value={commandInput}
 				oninput={handleInputChange}
 				class={inputVariants({ variant: 'empty' })}
 			/>
-			{#each filteredCommands as format, index}
-				<Button
-					variant={index === selectedIndex ? 'secondary' : 'ghost'}
-					size="sm"
-					onclick={() => {
-						handleCommand(format as FormatMethod);
-						closeCommandMenu();
-					}}
-				>
-					{format}
-				</Button>
-			{/each}
+			<div class="mt-2 flex flex-wrap">
+				{#each filteredCommands as format, index}
+					<Button
+						variant={index === selectedIndex ? 'secondary' : 'ghost'}
+						size="sm"
+						class="mb-2 mr-2"
+						onclick={() => {
+							handleCommand(format as FormatMethod);
+							closeCommandMenu();
+						}}
+					>
+						{format}
+					</Button>
+				{/each}
+			</div>
 		</div>
 	{/if}
 </div>
