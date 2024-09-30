@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { cn } from '$lib';
 	import { useWorkspaces } from '$lib/api/use-workspaces.svelte';
+	import Icon from '@iconify/svelte';
 	import { CreateIssue } from '../forms';
-	import { Button } from '../ui/button';
+	import { Button, buttonVariants } from '../ui/button';
 	import { Dropdown } from '../ui/dropdown';
 
 	type SidebarProps = {
@@ -14,6 +16,13 @@
 	let isWorkspaceDropdownOpen = $state(false);
 	let isCreateIssueModalOpen = $state(false);
 	let workspace = $derived(findWorkspaceBySlug(slug!));
+	let navigations = $state([
+		{
+			name: 'Notifications',
+			link: '/notifications',
+			icon: 'solar:bell-bold'
+		}
+	]);
 </script>
 
 <aside class="hidden w-[260px] content-start gap-4 border-r border-border px-6 py-6 md:grid">
@@ -48,4 +57,16 @@
 			/>
 		{/if}
 	{/if}
+
+	<section class="grid gap-1">
+		{#each navigations as { icon, link, name }}
+			<a
+				href={link}
+				class={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'flex justify-start text-base')}
+			>
+				<Icon {icon} class="mr-2 size-5" />
+				{name}
+			</a>
+		{/each}
+	</section>
 </aside>
