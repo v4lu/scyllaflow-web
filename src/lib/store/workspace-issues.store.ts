@@ -1,6 +1,6 @@
 import { authAPI } from '$lib/api';
 import type { Icons } from '$lib/components/icons';
-import type { CreateIssue, Issue } from '$lib/types/issue.type';
+import type { CreateIssue, Issue, UpdateIssuseRequest } from '$lib/types/issue.type';
 import { derived, writable } from 'svelte/store';
 import { toast } from './toast.store';
 
@@ -55,10 +55,46 @@ export function useWorkspaceIssues(authToken: string, slug: string) {
 		isSubmittingCreateIssueStore.set(false);
 	}
 
+	async function deleteIssue(id: number) {
+		try {
+			await api.delete(`issue/${slug}/${id}`);
+			issuesStore.update((issues) => issues.filter((issue) => issue.id !== id));
+			toast.success('Successfully deleted task');
+		} catch (err) {
+			console.error('Error deleting task:', err);
+			toast.error('Failed to delete task. Please try again.');
+		}
+	}
+
+	async function updateIssue(issue: Issue) {
+		try {
+			const payload: UpdateIssuseRequest = {
+				priority: issue.priority,
+				status: issue.status,
+				title: issue.title,
+				description: issue.description
+			};
+			const response = await api
+				.patch<Issue>(`issue/${slug}/${issue.id}`, {
+					json: { ...payload }
+				})
+				.json();
+			issuesStore.update((issues) =>
+				issues.map((i) => (i.id === issue.id ? { ...i, ...response } : i))
+			);
+			toast.success('Successfully updated task');
+		} catch (err) {
+			console.error('Error updating task:', err);
+			toast.error('Failed to update task. Please try again.');
+		}
+	}
+
 	loadWorkspaceIssues();
 
 	return {
-		createIssue
+		createIssue,
+		deleteIssue,
+		updateIssue
 	};
 }
 
@@ -70,6 +106,8 @@ export const statusOrder: StatusIconName[] = [
 	'Cancelled',
 	'Blocked'
 ];
+
+export const priorityOrder: PriorityIconName[] = ['Low', 'Medium', 'High', 'Urgent'];
 
 export function getStatusOrder(status: StatusIconName): number {
 	return statusOrder.indexOf(status);

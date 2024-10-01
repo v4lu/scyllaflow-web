@@ -16,5 +16,13 @@ export type CreateIssue = {
 	priority: string;
 	status: string;
 	dueDate: Date | null;
-	description: Object;
+	description: object;
+};
+
+export type UpdateIssuseRequest = {
+	title: string;
+	description?: string;
+	status: string;
+	priority: string;
+	dueDate?: string;
 };

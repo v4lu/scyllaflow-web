@@ -2,6 +2,7 @@
 	import { cn } from '$lib';
 	import { useWorkspaces } from '$lib/api/use-workspaces.svelte';
 	import Icon from '@iconify/svelte';
+	import { mode, setMode } from 'mode-watcher';
 	import { CreateIssue } from '../forms';
 	import { Button, buttonVariants } from '../ui/button';
 	import { Dropdown } from '../ui/dropdown';
@@ -33,7 +34,7 @@
 			{#each resp.workspaces as { name, image }}
 				<Button class="justify-start" size="sm" variant="ghost">
 					<img
-						src={image ? image : '/favicon.png'}
+						src={image || '/favicon.png'}
 						alt={name}
 						class="mr-4 size-6 rounded-full object-cover object-center"
 						height="24"
@@ -57,6 +58,10 @@
 			/>
 		{/if}
 	{/if}
+
+	<Button onclick={() => setMode($mode === 'light' ? 'dark' : 'light')}>
+		{$mode}
+	</Button>
 
 	<section class="grid gap-1">
 		{#each navigations as { icon, link, name }}

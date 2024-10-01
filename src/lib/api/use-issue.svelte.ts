@@ -1,15 +1,8 @@
 import { authAPI } from '$lib/api';
 import { toast } from '$lib/store/toast.store';
-import { type Issue as IssueType } from '$lib/types/issue.type';
+import type { Issue as IssueType, UpdateIssuseRequest } from '$lib/types/issue.type';
 import type { HTTPError } from 'ky';
 
-type UpdateIssuseRequest = {
-	title: string;
-	description?: string;
-	status: string;
-	priority: string;
-	dueDate?: string;
-};
 class Issue {
 	error = $state(null);
 	isLoading = $state(false);
@@ -44,7 +37,6 @@ export function useIssue(authToken: string, id: number, slug: string) {
 				priority: issue.priority,
 				dueDate: issue.dueDate
 			};
-			console.log(payload.description);
 			const response = await api
 				.patch<IssueType>(`issue/${slug}/${id}`, {
 					json: payload

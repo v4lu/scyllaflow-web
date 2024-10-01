@@ -7,7 +7,7 @@
 	import type { CreateIssue } from '$lib/types/issue.type';
 	import type { Workspace } from '$lib/types/workspace.type';
 	import Icon from '@iconify/svelte';
-	import { priorityArr, statusArr, type PriorityArrType, type StatusArrType } from '.';
+	import { type PriorityArrType, type StatusArrType, priorityArr, statusArr } from '.';
 	import { Button } from '../ui/button';
 	import { DatePicker } from '../ui/date-picker';
 	import { Dropdown } from '../ui/dropdown';

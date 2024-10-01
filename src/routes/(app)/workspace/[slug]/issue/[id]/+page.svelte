@@ -36,7 +36,7 @@
 			</div>
 			<div class="flex items-center justify-center gap-2 px-4 py-2 lg:px-8">
 				<a
-					href={`/`}
+					href="/"
 					class={buttonVariants({
 						size: 'icon',
 						variant: 'ghost'
@@ -46,7 +46,7 @@
 				</a>
 				<p class="text-xs font-normal">10/20</p>
 				<a
-					href={`/`}
+					href="/"
 					class={buttonVariants({
 						size: 'icon',
 						variant: 'ghost'

@@ -1,16 +1,23 @@
-<script>
-	import { mode, setMode } from 'mode-watcher';
-	import { Button } from '../ui/button';
+<script lang="ts">
+	import { sessionStore } from '$lib/store/session.store';
+
+	function getGreeting(): string {
+		const hour = new Date().getHours();
+		if (hour < 12) {
+			return 'Good morning';
+		} else if (hour < 18) {
+			return 'Good afternoon';
+		} else {
+			return 'Good evening';
+		}
+	}
 </script>
 
-<header class="flex justify-between border-b border-border bg-card p-4 lg:px-8">
+<header class="flex w-full justify-between border-b border-border bg-card p-4 lg:px-8">
 	<div class="flex w-full items-center justify-start space-x-2">
-		<div class="size-8 rounded-full bg-primary"></div>
-		<h3 class="text-xl font-bold">ScyllaFlow</h3>
+		<h3 class=" text-2xl font-bold">ScyllaFlow</h3>
 	</div>
-	<Button onclick={() => setMode($mode === 'light' ? 'dark' : 'light')}>
-		{$mode}
-	</Button>
-
-	<div class="size-8 rounded-full bg-red-300"></div>
+	<div class="flex w-full justify-end">
+		<p class="text-lg">{getGreeting()}, {$sessionStore.username}</p>
+	</div>
 </header>

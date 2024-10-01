@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { toast } from '$lib/store/toast.store';
-	import '@fontsource-variable/noto-sans';
+	import '@fontsource-variable/exo-2';
 	import { ModeWatcher } from 'mode-watcher';
 	import { fade } from 'svelte/transition';
 	import '../app.css';
