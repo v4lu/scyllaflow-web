@@ -19,6 +19,7 @@ export type CreateIssue = {
 	dueDate: Date | null;
 	description: string;
 	tag_ids?: number[];
+	project_id?: number;
 };
 
 export type UpdateIssuseRequest = {

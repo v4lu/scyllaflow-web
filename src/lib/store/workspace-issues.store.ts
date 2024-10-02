@@ -173,6 +173,17 @@ export function useWorkspaceIssues(authToken: string, slug: string | undefined) 
 		}
 	}
 
+	async function getByProject(id: number) {
+		try {
+			const response = await api.get<Issue[]>(`project/${slug}/${id}/issues`).json();
+			issuesStore.set(response);
+		} catch (error) {
+			console.error('Error fetching workspaces:', error);
+			issuesStore.set(null);
+			toast.error('Failed to load issues. Please try again.');
+		}
+	}
+
 	loadWorkspaceIssues();
 	loadWorkspaceTags();
 	loadWorkspaceProjects();
@@ -185,7 +196,8 @@ export function useWorkspaceIssues(authToken: string, slug: string | undefined) 
 		getByTag,
 		loadWorkspaceTags,
 		loadWorkspaceIssues,
-		createProject
+		createProject,
+		getByProject
 	};
 }
 

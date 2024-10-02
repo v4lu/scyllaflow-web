@@ -10,17 +10,24 @@
 		type StatusIconName,
 		groupedIssuesStore,
 		priorityOrder,
+		projectsStore,
 		statusOrder,
 		tagsStore,
 		useWorkspaceIssues
 	} from '$lib/store/workspace-issues.store.js';
-	import type { Issue, Tag } from '$lib/types/issue.type.js';
+	import type { Issue, Project, Tag } from '$lib/types/issue.type.js';
 	import Icon from '@iconify/svelte';
 	import { fade } from 'svelte/transition';
 
 	let { data } = $props();
-	const { deleteIssue, updateIssue, getByTag, loadWorkspaceTags, loadWorkspaceIssues } =
-		useWorkspaceIssues(data.accessToken, data.slug!);
+	const {
+		deleteIssue,
+		updateIssue,
+		getByTag,
+		loadWorkspaceTags,
+		loadWorkspaceIssues,
+		getByProject
+	} = useWorkspaceIssues(data.accessToken, data.slug!);
 	let isHorizontalView = $state(false);
 	let sortedStatusKeys = $derived(
 		$groupedIssuesStore
@@ -29,7 +36,9 @@
 	);
 	let filterDropdownOpen = $state(false);
 	let showTagSubmenu = $state(false);
+	let showProjectSubmenu = $state(false);
 	let hideTagSubmenuTimeout = $state<number | null>(null);
+	let hideProjectSubmenuTimeout = $state<number | null>(null);
 
 	// crazy...
 	let issueCountsByStatus = $derived(
@@ -184,15 +193,54 @@
 		}, 300) as unknown as number;
 	}
 
+	function handleProjectMouseEnter() {
+		if (hideProjectSubmenuTimeout) {
+			clearTimeout(hideProjectSubmenuTimeout);
+			hideProjectSubmenuTimeout = null;
+		}
+		showProjectSubmenu = true;
+		showTagSubmenu = false;
+	}
+
+	function handleProjectMouseLeave() {
+		hideProjectSubmenuTimeout = setTimeout(() => {
+			showProjectSubmenu = false;
+		}, 300) as unknown as number;
+	}
+
+	function handleProjectSubmenuMouseEnter() {
+		if (hideProjectSubmenuTimeout) {
+			clearTimeout(hideProjectSubmenuTimeout);
+			hideProjectSubmenuTimeout = null;
+		}
+	}
+
+	function handleProjectSubmenuMouseLeave() {
+		hideProjectSubmenuTimeout = setTimeout(() => {
+			showProjectSubmenu = false;
+		}, 300) as unknown as number;
+	}
+
 	async function selectTag(tag: Tag | null) {
 		filterDropdownOpen = false;
-		showTagSubmenu = false; // Close the tag submenu
+		showTagSubmenu = false;
 
 		if (tag) {
 			await getByTag(tag.id);
 		} else {
 			await loadWorkspaceIssues();
 			await loadWorkspaceTags();
+		}
+	}
+
+	async function selectProject(project: Project | null) {
+		filterDropdownOpen = false;
+		showProjectSubmenu = false;
+
+		if (project) {
+			await getByProject(project.id);
+		} else {
+			await loadWorkspaceIssues();
 		}
 	}
 </script>
@@ -203,14 +251,7 @@
 	<section class="hi-ft w-full border-b border-border">
 		<div class="flex items-center justify-between px-4 py-2 lg:pr-8">
 			<Dropdown bind:isOpen={filterDropdownOpen} downArrowIcon triggerText="Filter">
-				<div
-					tabindex="0"
-					role="button"
-					aria-roledescription="tag select dropdown"
-					class="relative"
-					onmouseenter={handleTagMouseEnter}
-					onmouseleave={handleTagMouseLeave}
-				>
+				<div class="relative" onmouseenter={handleTagMouseEnter} onmouseleave={handleTagMouseLeave}>
 					<Button variant="ghost" size="sm" class="w-full justify-between">
 						<span class="flex items-center">
 							<Icon icon="lucide:tag" class="mr-2 size-4" />
@@ -220,9 +261,6 @@
 					</Button>
 					{#if showTagSubmenu}
 						<div
-							tabindex="0"
-							role="button"
-							aria-roledescription="tag select dropdown"
 							class="absolute left-full top-0 ml-1 w-40 rounded-md border border-border bg-card shadow-md"
 							transition:fade={{ duration: 300 }}
 							onmouseenter={handleTagSubmenuMouseEnter}
@@ -248,6 +286,52 @@
 										style="background-color: {tag.color}; color: {getContrastColor(tag.color)};"
 									>
 										{tag.name}
+									</span>
+								</Button>
+							{/each}
+						</div>
+					{/if}
+				</div>
+				<div
+					class="relative"
+					onmouseenter={handleProjectMouseEnter}
+					onmouseleave={handleProjectMouseLeave}
+				>
+					<Button variant="ghost" size="sm" class="w-full justify-between">
+						<span class="flex items-center">
+							<Icon icon="lucide:folder" class="mr-2 size-4" />
+							By Project
+						</span>
+						<Icon icon="lucide:chevron-right" class="size-4" />
+					</Button>
+					{#if showProjectSubmenu}
+						<div
+							class="absolute left-full top-0 ml-1 w-40 rounded-md border border-border bg-card shadow-md"
+							transition:fade={{ duration: 300 }}
+							onmouseenter={handleProjectSubmenuMouseEnter}
+							onmouseleave={handleProjectSubmenuMouseLeave}
+						>
+							<Button
+								variant="ghost"
+								size="sm"
+								class="flex w-full justify-start"
+								onclick={() => selectProject(null)}
+							>
+								All Projects
+							</Button>
+							{#each $projectsStore || [] as project}
+								<Button
+									variant="ghost"
+									size="sm"
+									class="flex w-full items-center justify-start"
+									onclick={() => selectProject(project)}
+								>
+									<span
+										class="mr-2 inline-block h-3 w-3 rounded-full"
+										style="background-color: {project.color || '#000000'};"
+									></span>
+									<span class="truncate">
+										{project.name}
 									</span>
 								</Button>
 							{/each}

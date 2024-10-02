@@ -3,10 +3,11 @@
 	import {
 		isSubmittingCreateIssueStore,
 		isSubmittingCreateTagStore,
+		projectsStore,
 		tagsStore,
 		useWorkspaceIssues
 	} from '$lib/store/workspace-issues.store';
-	import type { CreateIssue, CreateTag } from '$lib/types/issue.type';
+	import type { CreateIssue, CreateTag, Project } from '$lib/types/issue.type';
 	import type { Workspace } from '$lib/types/workspace.type';
 	import Icon from '@iconify/svelte';
 	import { type PriorityArrType, type StatusArrType, priorityArr, statusArr } from '.';
@@ -38,6 +39,9 @@
 	let newTagName = $state('');
 	let newTagColor = $state('#000000');
 	let selectedTags = $state<number[]>([]);
+
+	let isProjectSelectDropdownOpen = $state(false);
+	let selectedProject = $state<Project>();
 
 	const { createIssue, createTag } = useWorkspaceIssues(authToken, workspace.slug);
 
@@ -73,13 +77,17 @@
 			status: selectedStatus.IconName,
 			priority: selectedPriority.IconName,
 			dueDate: selectedDate,
-			tag_ids: selectedTags
+			tag_ids: selectedTags,
+			project_id: selectedProject?.id
 		};
 		await createIssue(payload);
 		title = '';
 		description = {};
 		selectedPriority = priorityArr[0];
 		selectedStatus = statusArr[0];
+		selectedProject = undefined;
+		selectedTags = [];
+		selectedDate = null;
 		isOpen = false;
 	}
 </script>
@@ -208,9 +216,34 @@
 				{/if}
 			</div>
 		</Dropdown>
+		{#if $projectsStore}
+			<Dropdown
+				triggerClass="px-2 py-1 gap-0 w-fit min-w-fit text-xs font-medium"
+				triggerText={selectedProject ? selectedProject.name : 'Select project'}
+				bind:isOpen={isProjectSelectDropdownOpen}
+				triggerIcon="solar:bolt-linear"
+				triggerIconPosition="left"
+				triggerIconClass="mr-2"
+				class="top-[2rem] w-fit min-w-fit"
+			>
+				{#each $projectsStore as project}
+					<Button
+						variant="ghost"
+						size="sm"
+						class="flex w-full justify-start px-4 py-0 text-xs font-medium"
+						onclick={() => {
+							selectedProject = project;
+							isProjectSelectDropdownOpen = false;
+						}}
+					>
+						{project.name}
+					</Button>
+				{/each}
+			</Dropdown>
+		{/if}
 		<Dropdown
 			triggerIconPosition="left"
-			triggerIcon="solar:calendar-bold"
+			triggerIcon="solar:calendar-outline"
 			triggerIconClass="mr-2"
 			triggerClass="px-2 py-1 gap-0 w-fit min-w-fit text-xs font-medium"
 			triggerText={selectedDate ? getSelectedDateLabel(selectedDate) : 'Select due date'}
