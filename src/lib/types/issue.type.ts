@@ -9,6 +9,7 @@ export type Issue = {
 	dueDate: string;
 	version: number;
 	workspace_id: number;
+	tags?: Tag[];
 };
 
 export type CreateIssue = {
@@ -16,7 +17,8 @@ export type CreateIssue = {
 	priority: string;
 	status: string;
 	dueDate: Date | null;
-	description: object;
+	description: string;
+	tag_ids?: number[];
 };
 
 export type UpdateIssuseRequest = {
@@ -25,4 +27,29 @@ export type UpdateIssuseRequest = {
 	status: string;
 	priority: string;
 	dueDate?: string;
+};
+
+export type CreateTag = {
+	name: string;
+	color: string;
+};
+
+export type Tag = {
+	id: number;
+	name: string;
+	color: string;
+	workspace_id: number;
+	createdAt: string;
+};
+
+export type CreateProject = {
+	name: string;
+};
+
+export type Project = {
+	id: number;
+	name: string;
+	color?: string;
+	description?: string;
+	createdAt: string;
 };

@@ -1,7 +1,8 @@
 import type { Component } from 'svelte';
-import { Icons, type IconProps } from '../icons';
+import { type IconProps, Icons } from '../icons';
 
 export { default as CreateIssue } from './create-issuse.svelte';
+export { default as CreateWorkspace } from './create-workspace.svelte';
 
 type IconsType = typeof Icons;
 export type PriorityIconName = keyof IconsType['priority'];

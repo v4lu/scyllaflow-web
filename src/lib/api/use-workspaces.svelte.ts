@@ -6,7 +6,7 @@ class Workspaces {
 	error = $state(null);
 	isLoading = $state(false);
 
-	workspaces = $state<Workspace[]>([]);
+	workspaces = $state<Workspace[] | null>(null);
 
 	isSubbmitingCreateWorkspace = $state(false);
 }
@@ -34,7 +34,7 @@ export function useWorkspaces(authToken: string) {
 					json: { name, image }
 				})
 				.json();
-			resp.workspaces.push(response);
+			resp.workspaces = [response, ...(resp.workspaces || [])];
 			toast.success('Successfully created new workspace');
 		} catch (err) {
 			console.error('Error creating workspace:', err);
@@ -44,6 +44,7 @@ export function useWorkspaces(authToken: string) {
 	}
 
 	function findWorkspaceBySlug(slug: string): Workspace | undefined {
+		if (!resp.workspaces) return;
 		return resp.workspaces.find((w) => w.slug === slug);
 	}
 

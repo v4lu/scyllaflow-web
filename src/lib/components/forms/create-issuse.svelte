@@ -2,9 +2,11 @@
 	import { getSelectedDateLabel } from '$lib';
 	import {
 		isSubmittingCreateIssueStore,
+		isSubmittingCreateTagStore,
+		tagsStore,
 		useWorkspaceIssues
 	} from '$lib/store/workspace-issues.store';
-	import type { CreateIssue } from '$lib/types/issue.type';
+	import type { CreateIssue, CreateTag } from '$lib/types/issue.type';
 	import type { Workspace } from '$lib/types/workspace.type';
 	import Icon from '@iconify/svelte';
 	import { type PriorityArrType, type StatusArrType, priorityArr, statusArr } from '.';
@@ -32,7 +34,28 @@
 	let title = $state('');
 	let description = $state<object>({});
 
-	const { createIssue } = useWorkspaceIssues(authToken, workspace.slug);
+	let isTagDropdownOpen = $state(false);
+	let newTagName = $state('');
+	let newTagColor = $state('#000000');
+	let selectedTags = $state<number[]>([]);
+
+	const { createIssue, createTag } = useWorkspaceIssues(authToken, workspace.slug);
+
+	async function handleAddTag() {
+		const payload: CreateTag = {
+			color: newTagColor,
+			name: newTagName
+		};
+		await createTag(payload);
+	}
+
+	function handleTagSelect(tagId: number) {
+		if (selectedTags.includes(tagId)) {
+			selectedTags = selectedTags.filter((id) => id !== tagId);
+		} else {
+			selectedTags = [...selectedTags, tagId];
+		}
+	}
 
 	function handleDateSelect(date: Date | null) {
 		selectedDate = date;
@@ -49,7 +72,8 @@
 			description: JSON.stringify(description),
 			status: selectedStatus.IconName,
 			priority: selectedPriority.IconName,
-			dueDate: selectedDate
+			dueDate: selectedDate,
+			tag_ids: selectedTags
 		};
 		await createIssue(payload);
 		title = '';
@@ -123,6 +147,66 @@
 					{status.IconName}
 				</Button>
 			{/each}
+		</Dropdown>
+		<Dropdown
+			triggerClass="px-2 py-1 gap-0 w-fit min-w-fit text-xs font-medium"
+			triggerText={selectedTags.length ? `${selectedTags.length} tags` : 'Select tags'}
+			bind:isOpen={isTagDropdownOpen}
+			triggerIcon="lucide:tag"
+			triggerIconPosition="left"
+			triggerIconClass="size-4 mr-1"
+			class="top-[2rem] w-fit min-w-[15rem] p-0"
+		>
+			<div class="p-2">
+				<div class="mb-2 flex items-center space-x-2">
+					<Input
+						type="text"
+						placeholder="New tag name"
+						bind:value={newTagName}
+						class="h-8 flex-shrink"
+					/>
+					<Input
+						type="color"
+						bind:value={newTagColor}
+						class="size-8
+					 p-0"
+					/>
+					<Button
+						size="icon"
+						class="size-8"
+						variant="outline"
+						onclick={handleAddTag}
+						disabled={$isSubmittingCreateTagStore}
+					>
+						{#if $isSubmittingCreateTagStore}
+							<Icon icon="lucide:loader" class="size-4 animate-spin" />
+						{:else}
+							<Icon icon="lucide:plus" class="size-4" />
+						{/if}
+					</Button>
+				</div>
+				{#if $tagsStore === null}
+					<p class="mt-2 text-sm text-muted-foreground">No tags available.</p>
+				{:else}
+					{#each $tagsStore as tag}
+						<Button
+							variant="ghost"
+							size="sm"
+							class="mb-1 flex w-full justify-start px-4 py-2 text-xs font-medium"
+							onclick={() => handleTagSelect(tag.id)}
+						>
+							<span
+								class="mr-2 inline-block h-3 w-3 rounded-full"
+								style={`background-color: ${tag.color};`}
+							></span>
+							{tag.name}
+							{#if selectedTags.includes(tag.id)}
+								<Icon icon="lucide:check" class="ml-auto" />
+							{/if}
+						</Button>
+					{/each}
+				{/if}
+			</div>
 		</Dropdown>
 		<Dropdown
 			triggerIconPosition="left"

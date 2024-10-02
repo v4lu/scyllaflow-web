@@ -18,6 +18,7 @@
 		CustomIcon?: Component<IconProps>;
 		customIconClass?: string;
 		triggerIconPosition?: 'left' | 'right';
+		wrapperClass?: string;
 	};
 
 	let {
@@ -31,6 +32,7 @@
 		CustomIcon,
 		customIconClass,
 		triggerIconPosition = 'right',
+		wrapperClass,
 		children
 	}: Props = $props();
 
@@ -52,7 +54,7 @@
 	}
 </script>
 
-<div class="relative">
+<div class={cn('relative', wrapperClass)}>
 	<button
 		bind:this={btn}
 		type="button"
@@ -93,11 +95,11 @@
 			use:clickOutside
 			transition:slide={{ duration: 300, easing: cubicOut }}
 			class={cn(
-				'absolute top-[2.8rem] z-[120] w-full min-w-[12rem] gap-2 overflow-y-auto rounded-md border border-border bg-card p-2',
+				'absolute top-[2.8rem] z-[120] w-full min-w-[12rem] rounded-md border border-border bg-card shadow-md',
 				className
 			)}
 		>
-			<div transition:fade={{ duration: 200 }}>
+			<div transition:fade={{ duration: 200 }} class="p-2">
 				{@render children()}
 			</div>
 		</div>

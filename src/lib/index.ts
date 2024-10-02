@@ -58,3 +58,15 @@ export function isPastToday(date: Date | string): boolean {
 	const today = startOfDay(new Date());
 	return isBefore(date, today);
 }
+
+export function getContrastColor(hexColor: string): string {
+	hexColor = hexColor.replace('#', '');
+
+	const r = Number.parseInt(hexColor.substr(0, 2), 16);
+	const g = Number.parseInt(hexColor.substr(2, 2), 16);
+	const b = Number.parseInt(hexColor.substr(4, 2), 16);
+
+	const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+	return luminance > 0.5 ? '#000000' : '#FFFFFF';
+}

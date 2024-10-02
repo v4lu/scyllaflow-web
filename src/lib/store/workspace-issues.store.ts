@@ -1,6 +1,14 @@
 import { authAPI } from '$lib/api';
 import type { Icons } from '$lib/components/icons';
-import type { CreateIssue, Issue, UpdateIssuseRequest } from '$lib/types/issue.type';
+import type {
+	CreateIssue,
+	CreateProject,
+	CreateTag,
+	Issue,
+	Project,
+	Tag,
+	UpdateIssuseRequest
+} from '$lib/types/issue.type';
 import { derived, writable } from 'svelte/store';
 import { toast } from './toast.store';
 
@@ -10,8 +18,12 @@ export type PriorityIconName = keyof IconsType['priority'];
 export type GroupedIssues = Record<StatusIconName, Issue[]>;
 
 export const issuesStore = writable<Issue[] | null>(null);
+export const tagsStore = writable<Tag[] | null>(null);
+export const projectsStore = writable<Project[] | null>(null);
 export const isLoadingStore = writable(false);
 export const isSubmittingCreateIssueStore = writable(false);
+export const isSubmittingCreateTagStore = writable(false);
+export const isSubmittingCreateProjectStore = writable(false);
 
 export const groupedIssuesStore = derived(issuesStore, ($issues) => {
 	if (!$issues) return null;
@@ -25,7 +37,7 @@ export const groupedIssuesStore = derived(issuesStore, ($issues) => {
 	}, {} as GroupedIssues);
 });
 
-export function useWorkspaceIssues(authToken: string, slug: string) {
+export function useWorkspaceIssues(authToken: string, slug: string | undefined) {
 	const api = authAPI(authToken);
 
 	async function loadWorkspaceIssues() {
@@ -35,10 +47,21 @@ export function useWorkspaceIssues(authToken: string, slug: string) {
 			issuesStore.set(response);
 		} catch (error) {
 			console.error('Error fetching workspaces:', error);
-			issuesStore.set(null); // Set to null on error
+			issuesStore.set(null);
 			toast.error('Failed to load issues. Please try again.');
 		} finally {
 			isLoadingStore.set(false);
+		}
+	}
+
+	async function loadWorkspaceTags() {
+		try {
+			const response = await api.get<Tag[]>(`issue/${slug}/tag`).json();
+			tagsStore.set(response);
+		} catch (error) {
+			console.error('Error fetching workspaces:', error);
+			tagsStore.set(null);
+			toast.error('Failed to load tags. Please try again.');
 		}
 	}
 
@@ -94,12 +117,75 @@ export function useWorkspaceIssues(authToken: string, slug: string) {
 		}
 	}
 
+	async function createTag(payload: CreateTag) {
+		isSubmittingCreateTagStore.set(true);
+		try {
+			const response = await api
+				.post<Tag>(`issue/${slug}/tag`, {
+					json: { ...payload }
+				})
+				.json();
+			tagsStore.update((tags) => (tags ? [response, ...tags] : [response]));
+			toast.success('Successfully created new task');
+		} catch (err) {
+			console.error('Error creating task:', err);
+			toast.error('Failed to create task. Please try again.');
+		}
+		isSubmittingCreateTagStore.set(false);
+	}
+
+	async function getByTag(tagId: number) {
+		try {
+			const response = await api.get<Issue[]>(`issue/${slug}/tag/${tagId}`).json();
+			issuesStore.set(response);
+		} catch (error) {
+			console.error('Error fetching workspaces:', error);
+			issuesStore.set(null);
+			toast.error('Failed to load issues. Please try again.');
+		}
+	}
+
+	async function createProject(payload: CreateProject) {
+		isSubmittingCreateProjectStore.set(true);
+		try {
+			const response = await api
+				.post<Project>(`project/${slug}`, {
+					json: { ...payload }
+				})
+				.json();
+			projectsStore.update((issues) => (issues ? [response, ...issues] : [response]));
+			toast.success('Successfully created new project');
+		} catch (err) {
+			console.error('Error creating project:', err);
+			toast.error('Failed to create project. Please try again.');
+		}
+		isSubmittingCreateProjectStore.set(false);
+	}
+
+	async function loadWorkspaceProjects() {
+		try {
+			const response = await api.get<Project[]>(`project/${slug}`).json();
+			projectsStore.set(response);
+		} catch (error) {
+			console.error('Error fetching workspaces:', error);
+			projectsStore.set(null);
+			toast.error('Failed to load projects. Please try again.');
+		}
+	}
+
 	loadWorkspaceIssues();
+	loadWorkspaceTags();
+	loadWorkspaceProjects();
 
 	return {
 		createIssue,
 		deleteIssue,
-		updateIssue
+		updateIssue,
+		createTag,
+		getByTag,
+		loadWorkspaceTags,
+		loadWorkspaceIssues,
+		createProject
 	};
 }
 

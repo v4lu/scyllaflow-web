@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { cn, formatDateOrDefault, isPastToday, monthAndDay } from '$lib';
+	import { cn, formatDateOrDefault, getContrastColor, isPastToday, monthAndDay } from '$lib';
 	import { Icons } from '$lib/components/icons/index.js';
 	import { Button } from '$lib/components/ui/button';
 	import { ContextMenu } from '$lib/components/ui/context-menu/index.js';
+	import { Dropdown } from '$lib/components/ui/dropdown';
 	import { DeleteModal } from '$lib/components/ui/modal';
 	import {
 		type PriorityIconName,
@@ -10,20 +11,25 @@
 		groupedIssuesStore,
 		priorityOrder,
 		statusOrder,
+		tagsStore,
 		useWorkspaceIssues
 	} from '$lib/store/workspace-issues.store.js';
-	import type { Issue } from '$lib/types/issue.type.js';
+	import type { Issue, Tag } from '$lib/types/issue.type.js';
 	import Icon from '@iconify/svelte';
 	import { fade } from 'svelte/transition';
 
 	let { data } = $props();
-	const { deleteIssue, updateIssue } = useWorkspaceIssues(data.accessToken, data.slug!);
+	const { deleteIssue, updateIssue, getByTag, loadWorkspaceTags, loadWorkspaceIssues } =
+		useWorkspaceIssues(data.accessToken, data.slug!);
 	let isHorizontalView = $state(false);
 	let sortedStatusKeys = $derived(
 		$groupedIssuesStore
 			? statusOrder.filter((status) => $groupedIssuesStore[status]?.length > 0)
 			: []
 	);
+	let filterDropdownOpen = $state(false);
+	let showTagSubmenu = $state(false);
+	let hideTagSubmenuTimeout = $state<number | null>(null);
 
 	// crazy...
 	let issueCountsByStatus = $derived(
@@ -150,14 +156,105 @@
 			showDeleteConfirmation = false;
 		}
 	}
+
+	function handleTagMouseEnter() {
+		if (hideTagSubmenuTimeout) {
+			clearTimeout(hideTagSubmenuTimeout);
+			hideTagSubmenuTimeout = null;
+		}
+		showTagSubmenu = true;
+	}
+
+	function handleTagMouseLeave() {
+		hideTagSubmenuTimeout = setTimeout(() => {
+			showTagSubmenu = false;
+		}, 300) as unknown as number;
+	}
+
+	function handleTagSubmenuMouseEnter() {
+		if (hideTagSubmenuTimeout) {
+			clearTimeout(hideTagSubmenuTimeout);
+			hideTagSubmenuTimeout = null;
+		}
+	}
+
+	function handleTagSubmenuMouseLeave() {
+		hideTagSubmenuTimeout = setTimeout(() => {
+			showTagSubmenu = false;
+		}, 300) as unknown as number;
+	}
+
+	async function selectTag(tag: Tag | null) {
+		filterDropdownOpen = false;
+		showTagSubmenu = false; // Close the tag submenu
+
+		if (tag) {
+			await getByTag(tag.id);
+		} else {
+			await loadWorkspaceIssues();
+			await loadWorkspaceTags();
+		}
+	}
 </script>
 
 <svelte:window onclick={handleWindowClick} onresize={handleWindowResize} />
 
 <main class="">
 	<section class="hi-ft w-full border-b border-border">
-		<div class="flex justify-between px-4 py-2 lg:px-8">
-			<h3 class="text-sm font-medium">Filter</h3>
+		<div class="flex items-center justify-between px-4 py-2 lg:pr-8">
+			<Dropdown bind:isOpen={filterDropdownOpen} downArrowIcon triggerText="Filter">
+				<div
+					tabindex="0"
+					role="button"
+					aria-roledescription="tag select dropdown"
+					class="relative"
+					onmouseenter={handleTagMouseEnter}
+					onmouseleave={handleTagMouseLeave}
+				>
+					<Button variant="ghost" size="sm" class="w-full justify-between">
+						<span class="flex items-center">
+							<Icon icon="lucide:tag" class="mr-2 size-4" />
+							By Tag
+						</span>
+						<Icon icon="lucide:chevron-right" class="size-4" />
+					</Button>
+					{#if showTagSubmenu}
+						<div
+							tabindex="0"
+							role="button"
+							aria-roledescription="tag select dropdown"
+							class="absolute left-full top-0 ml-1 w-40 rounded-md border border-border bg-card shadow-md"
+							transition:fade={{ duration: 300 }}
+							onmouseenter={handleTagSubmenuMouseEnter}
+							onmouseleave={handleTagSubmenuMouseLeave}
+						>
+							<Button
+								variant="ghost"
+								size="sm"
+								class="flex w-full justify-start"
+								onclick={() => selectTag(null)}
+							>
+								All Tags
+							</Button>
+							{#each $tagsStore || [] as tag}
+								<Button
+									variant="ghost"
+									size="sm"
+									class="flex w-full items-center justify-start"
+									onclick={() => selectTag(tag)}
+								>
+									<span
+										class="w-full rounded px-1 py-0.5 text-xs"
+										style="background-color: {tag.color}; color: {getContrastColor(tag.color)};"
+									>
+										{tag.name}
+									</span>
+								</Button>
+							{/each}
+						</div>
+					{/if}
+				</div>
+			</Dropdown>
 			<h3 class="text-sm font-medium">Display</h3>
 			<button onclick={toggleView}>
 				{isHorizontalView ? 'Card View' : 'Table View'}
@@ -165,11 +262,11 @@
 		</div>
 	</section>
 	{#if $groupedIssuesStore === null}
-		<div class="flex h-[calc(100dvh-130px)] items-center justify-center">
+		<div class="flex h-[calc(100dvh-120px)] items-center justify-center">
 			<p class="text-lg text-muted-foreground">No issues available.</p>
 		</div>
 	{:else if isHorizontalView}
-		<div class="h-[calc(100dvh-130px)] w-[calc(100vw-260px)] overflow-hidden">
+		<div class="h-[calc(100dvh-120px)] w-[calc(100vw-260px)] overflow-hidden">
 			<div class="h-full w-full overflow-x-auto overflow-y-auto">
 				<div class="flex h-full">
 					{#each sortedStatusKeys as status}
@@ -193,7 +290,7 @@
 			</div>
 		</div>
 	{:else}
-		<div class="h-[calc(100dvh-110px)] overflow-hidden">
+		<div class="h-[calc(100dvh-120px)] overflow-hidden">
 			<div class="h-full overflow-y-auto">
 				{#each sortedStatusKeys as status}
 					{@const IconStatus = getStatusIcon(status)}
@@ -212,7 +309,6 @@
 									status === 'Backlog' && 'text-purple-600 dark:text-purple-400'
 								)}
 							/>
-
 							<h2 class="text-xs font-medium">
 								{status} ({issueCountsByStatus[status] || 0})
 							</h2>
@@ -242,19 +338,37 @@
 											issue.status === 'Backlog' && 'text-purple-600 dark:text-purple-400'
 										)}
 									/>
-									<a href={`/workspace/${data.slug}/issue/${issue.id}`} class="w-fit font-medium"
-										>{issue.title}</a
-									>
-									<p
-										class={cn(
-											'text-xs font-semibold text-muted-foreground',
-											formatDateOrDefault(issue.dueDate) !== '-' &&
-												isPastToday(issue.dueDate) &&
-												'text-destructive'
-										)}
-									>
-										{issue.dueDate ? monthAndDay(issue.dueDate) : '-'}
-									</p>
+									<a href={`/workspace/${data.slug}/issue/${issue.id}`} class="w-fit font-medium">
+										{issue.title}
+									</a>
+									<div class="flex items-center gap-2">
+										{#if issue.tags && issue.tags.length > 0}
+											<div class="flex gap-1">
+												{#each issue.tags as tag}
+													<span
+														class="flex items-center justify-center rounded-lg px-2 py-0.5 text-xs font-medium"
+														style="background-color: {tag.color}; color: {getContrastColor(
+															tag.color
+														)};"
+													>
+														{tag.name}
+													</span>
+												{/each}
+											</div>
+										{/if}
+										{#if issue.dueDate && formatDateOrDefault(issue.dueDate) !== '-'}
+											<p
+												class={cn(
+													'text-xs font-semibold text-muted-foreground',
+													formatDateOrDefault(issue.dueDate) !== '-' &&
+														isPastToday(issue.dueDate) &&
+														'text-destructive'
+												)}
+											>
+												{monthAndDay(issue.dueDate)}
+											</p>
+										{/if}
+									</div>
 								</div>
 							{/each}
 						</div>
