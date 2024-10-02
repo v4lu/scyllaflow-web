@@ -17,4 +17,4 @@
 	</section>
 </main>
 
-<CreateWorkspace bind:isOpen={isOpenCreateWorkspace} authToken={data.accessToken} />
+<CreateWorkspace bind:isOpen={isOpenCreateWorkspace} authToken={data.accessToken} shouldGoto />

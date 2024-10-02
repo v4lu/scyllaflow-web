@@ -12,8 +12,14 @@
 		isOpen: boolean;
 		authToken: string;
 		createWorkspaceParent?: (name: string, image: string) => Promise<void>;
+		shouldGoto?: boolean;
 	};
-	let { isOpen = $bindable(), authToken, createWorkspaceParent }: Props = $props();
+	let {
+		isOpen = $bindable(),
+		authToken,
+		createWorkspaceParent,
+		shouldGoto = false
+	}: Props = $props();
 
 	const { resp, createWorkspace } = useWorkspaces(authToken);
 
@@ -54,7 +60,9 @@
 		}
 		imageUrl = '';
 		name = '';
-		goto('/');
+		if (shouldGoto) {
+			goto('/');
+		}
 		isOpen = false;
 	}
 </script>

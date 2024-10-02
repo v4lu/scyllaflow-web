@@ -251,7 +251,14 @@
 	<section class="hi-ft w-full border-b border-border">
 		<div class="flex items-center justify-between px-4 py-2 lg:pr-8">
 			<Dropdown bind:isOpen={filterDropdownOpen} downArrowIcon triggerText="Filter">
-				<div class="relative" onmouseenter={handleTagMouseEnter} onmouseleave={handleTagMouseLeave}>
+				<div
+					tabindex="0"
+					role="button"
+					aria-roledescription="Show all tags"
+					class="relative"
+					onmouseenter={handleTagMouseEnter}
+					onmouseleave={handleTagMouseLeave}
+				>
 					<Button variant="ghost" size="sm" class="w-full justify-between">
 						<span class="flex items-center">
 							<Icon icon="lucide:tag" class="mr-2 size-4" />
@@ -261,6 +268,9 @@
 					</Button>
 					{#if showTagSubmenu}
 						<div
+							tabindex="0"
+							role="button"
+							aria-roledescription="Show all tags"
 							class="absolute left-full top-0 ml-1 w-40 rounded-md border border-border bg-card shadow-md"
 							transition:fade={{ duration: 300 }}
 							onmouseenter={handleTagSubmenuMouseEnter}
@@ -293,6 +303,9 @@
 					{/if}
 				</div>
 				<div
+					tabindex="0"
+					role="button"
+					aria-roledescription="Show all tags"
 					class="relative"
 					onmouseenter={handleProjectMouseEnter}
 					onmouseleave={handleProjectMouseLeave}
@@ -306,6 +319,9 @@
 					</Button>
 					{#if showProjectSubmenu}
 						<div
+							tabindex="0"
+							role="button"
+							aria-roledescription="Show all tags"
 							class="absolute left-full top-0 ml-1 w-40 rounded-md border border-border bg-card shadow-md"
 							transition:fade={{ duration: 300 }}
 							onmouseenter={handleProjectSubmenuMouseEnter}

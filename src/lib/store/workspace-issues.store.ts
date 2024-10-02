@@ -162,9 +162,9 @@ export function useWorkspaceIssues(authToken: string, slug: string | undefined) 
 		isSubmittingCreateProjectStore.set(false);
 	}
 
-	async function loadWorkspaceProjects() {
+	async function loadWorkspaceProjects(tslug: string) {
 		try {
-			const response = await api.get<Project[]>(`project/${slug}`).json();
+			const response = await api.get<Project[]>(`project/${tslug}`).json();
 			projectsStore.set(response);
 		} catch (error) {
 			console.error('Error fetching workspaces:', error);
@@ -186,7 +186,7 @@ export function useWorkspaceIssues(authToken: string, slug: string | undefined) 
 
 	loadWorkspaceIssues();
 	loadWorkspaceTags();
-	loadWorkspaceProjects();
+	loadWorkspaceProjects(slug!);
 
 	return {
 		createIssue,
@@ -197,7 +197,8 @@ export function useWorkspaceIssues(authToken: string, slug: string | undefined) 
 		loadWorkspaceTags,
 		loadWorkspaceIssues,
 		createProject,
-		getByProject
+		getByProject,
+		loadWorkspaceProjects
 	};
 }
 

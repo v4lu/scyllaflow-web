@@ -9,6 +9,8 @@
 	import type { CreateProject } from '$lib/types/issue.type';
 	import Icon from '@iconify/svelte';
 	import { mode, setMode } from 'mode-watcher';
+	import { cubicOut } from 'svelte/easing';
+	import { fade, slide } from 'svelte/transition';
 	import { CreateIssue, CreateWorkspace } from '../forms';
 	import { Button, buttonVariants } from '../ui/button';
 	import { Field } from '../ui/field';
@@ -23,17 +25,11 @@
 	let { authToken, slug }: SidebarProps = $props();
 	const { resp, findWorkspaceBySlug, createWorkspace } = useWorkspaces(authToken);
 
-	const { createProject } = useWorkspaceIssues(authToken, slug);
+	const { createProject, loadWorkspaceProjects } = useWorkspaceIssues(authToken, slug);
 	let isCreateIssueModalOpen = $state(false);
 	let createProjectOpen = $state(false);
 	let workspace = $derived(findWorkspaceBySlug(slug!));
-	let navigations = $state([
-		{
-			name: 'Notifications',
-			link: '/notifications',
-			icon: 'solar:bell-bold'
-		}
-	]);
+
 	let createWorkspaceModalOpen = $state(false);
 	let name = $state('');
 
@@ -48,78 +44,79 @@
 </script>
 
 <aside
-	class="hidden w-[260px] flex-col content-start justify-between border-r border-border px-6 py-6 md:flex"
+	transition:fade={{ duration: 300 }}
+	class="hidden w-[260px] flex-col content-start justify-between border-r border-border px-6 py-4 md:flex"
 >
 	<div>
-		<h2 class="mb-2 text-sm font-bold">Workspaces</h2>
-		{#if resp.isLoading}
-			<p>Loading..</p>
-		{:else if resp.workspaces}
-			<div class="space-y-1">
-				{#each resp.workspaces as { name, image }}
-					<Button class="w-full justify-start" size="sm" variant="ghost">
-						<img
-							src={image || '/favicon.png'}
-							alt={name}
-							class="mr-4 size-6 rounded-full object-cover object-center"
-							height="24"
-							width="24"
-						/>
-						<span class="max-w-[8rem] truncate">{name}</span>
-					</Button>
-				{/each}
+		<article>
+			<div class="mb-2 mt-4 flex w-full items-center justify-between">
+				<h2 class="text-xs font-bold text-muted-foreground">Workspaces</h2>
 				<Button
 					onclick={() => (createWorkspaceModalOpen = true)}
 					variant="ghost"
-					size="sm"
-					class="w-full"
+					size="icon-xs"
+					class="text-muted-foreground"
 				>
-					Create workspace
-					<Icon icon="lucide:plus" class="ml-2 size-4" />
+					<Icon icon="lucide:plus" class=" size-3.5" />
 				</Button>
 			</div>
-		{/if}
-
-		<h2 class="mb-2 mt-2 text-sm font-bold">Projects</h2>
-		<div class="space-y-1">
-			{#if resp.isLoading}
-				<p>Loading..</p>
-			{:else if $projectsStore}
-				{#each $projectsStore as { name }}
-					<Button class="w-full justify-start" size="sm" variant="ghost">
-						<span class="max-w-[8rem] truncate">{name}</span>
-					</Button>
-				{/each}
-			{/if}
-			<Button onclick={() => (createProjectOpen = true)} variant="ghost" size="sm" class="w-full">
-				Create project
-				<Icon icon="lucide:plus" class="ml-2 size-4" />
-			</Button>
-		</div>
-
-		<nav class="mt-2">
-			<h2 class="mb-2 text-sm font-bold">Navigation</h2>
 			<div class="space-y-1">
-				{#each navigations as { icon, link, name }}
-					<a
-						href={link}
-						class={cn(
-							buttonVariants({ variant: 'ghost', size: 'sm' }),
-							'flex w-full justify-start text-base'
-						)}
-					>
-						<Icon {icon} class="mr-2 size-5" />
-						{name}
-					</a>
-				{/each}
+				{#if resp.workspaces}
+					{#each resp.workspaces as { name, image, slug }}
+						<a
+							transition:slide|local={{ duration: 300, easing: cubicOut }}
+							onclick={() => loadWorkspaceProjects(slug)}
+							href={`/workspace/${slug}`}
+							class={cn(
+								buttonVariants({
+									size: 'sm',
+									variant: 'ghost'
+								}),
+								'flex w-full justify-start'
+							)}
+						>
+							<img
+								src={image || '/favicon.png'}
+								alt={name}
+								class="mr-4 size-6 rounded-full object-cover object-center"
+								height="24"
+								width="24"
+							/>
+							<span class="max-w-[8rem] truncate">{name}</span>
+						</a>
+					{/each}
+				{/if}
 			</div>
-		</nav>
+		</article>
+
+		<article class="">
+			<div class="mb-2 mt-4 flex w-full items-center justify-between">
+				<h2 class="w-full text-xs font-bold text-muted-foreground">Workspace Projects</h2>
+				<Button
+					onclick={() => (createProjectOpen = true)}
+					class="flex w-full justify-start"
+					variant="ghost"
+					size="sm"
+				>
+					<Icon icon="lucide:plus" class="size-3.5" />
+				</Button>
+			</div>
+			<div class="space-y-1">
+				{#if $projectsStore}
+					{#each $projectsStore as { name }}
+						<Button class="w-full justify-start" size="sm" variant="ghost">
+							<span class="max-w-[8rem] truncate">{name}</span>
+						</Button>
+					{/each}
+				{/if}
+			</div>
+		</article>
 	</div>
 
 	<div class="mt-auto space-y-4">
 		{#if slug && workspace}
 			<Button
-				class="w-full"
+				class="w-full "
 				onclick={() => {
 					isCreateIssueModalOpen = true;
 				}}>Create Issue</Button
