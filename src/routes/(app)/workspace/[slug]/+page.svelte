@@ -20,16 +20,22 @@
 	const { deleteIssue, updateIssue } = useWorkspaceIssues(data.accessToken, data.slug!);
 	let isHorizontalView = $state(false);
 	let sortedStatusKeys = $derived(
-		statusOrder.filter((status) => $groupedIssuesStore[status]?.length > 0)
+		$groupedIssuesStore
+			? statusOrder.filter((status) => $groupedIssuesStore[status]?.length > 0)
+			: []
 	);
+
+	// crazy...
 	let issueCountsByStatus = $derived(
-		Object.entries($groupedIssuesStore).reduce(
-			(acc, [status, issues]) => {
-				acc[status as StatusIconName] = issues.length;
-				return acc;
-			},
-			{} as Record<StatusIconName, number>
-		)
+		$groupedIssuesStore
+			? (Object.entries($groupedIssuesStore).reduce(
+					(acc, [status, issues]) => {
+						acc[status as StatusIconName] = issues.length;
+						return acc;
+					},
+					{} as Record<StatusIconName, number>
+				) as Record<StatusIconName, number>)
+			: ({} as Record<StatusIconName, number>)
 	);
 
 	let showContextMenu = $state(false);
@@ -158,7 +164,11 @@
 			</button>
 		</div>
 	</section>
-	{#if isHorizontalView}
+	{#if $groupedIssuesStore === null}
+		<div class="flex h-[calc(100dvh-130px)] items-center justify-center">
+			<p class="text-lg text-muted-foreground">No issues available.</p>
+		</div>
+	{:else if isHorizontalView}
 		<div class="h-[calc(100dvh-130px)] w-[calc(100vw-260px)] overflow-hidden">
 			<div class="h-full w-full overflow-x-auto overflow-y-auto">
 				<div class="flex h-full">

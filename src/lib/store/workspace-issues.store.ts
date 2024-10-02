@@ -9,11 +9,12 @@ export type StatusIconName = keyof IconsType['status'];
 export type PriorityIconName = keyof IconsType['priority'];
 export type GroupedIssues = Record<StatusIconName, Issue[]>;
 
-export const issuesStore = writable<Issue[]>([]);
+export const issuesStore = writable<Issue[] | null>(null);
 export const isLoadingStore = writable(false);
 export const isSubmittingCreateIssueStore = writable(false);
 
 export const groupedIssuesStore = derived(issuesStore, ($issues) => {
+	if (!$issues) return null;
 	return $issues.reduce((acc, issue) => {
 		const status = issue.status as StatusIconName;
 		if (!acc[status]) {
@@ -34,8 +35,11 @@ export function useWorkspaceIssues(authToken: string, slug: string) {
 			issuesStore.set(response);
 		} catch (error) {
 			console.error('Error fetching workspaces:', error);
+			issuesStore.set(null); // Set to null on error
+			toast.error('Failed to load issues. Please try again.');
+		} finally {
+			isLoadingStore.set(false);
 		}
-		isLoadingStore.set(false);
 	}
 
 	async function createIssue(payload: CreateIssue) {
@@ -46,19 +50,20 @@ export function useWorkspaceIssues(authToken: string, slug: string) {
 					json: { ...payload }
 				})
 				.json();
-			issuesStore.update((issues) => [response, ...issues]);
+			issuesStore.update((issues) => (issues ? [response, ...issues] : [response]));
 			toast.success('Successfully created new task');
 		} catch (err) {
 			console.error('Error creating task:', err);
 			toast.error('Failed to create task. Please try again.');
+		} finally {
+			isSubmittingCreateIssueStore.set(false);
 		}
-		isSubmittingCreateIssueStore.set(false);
 	}
 
 	async function deleteIssue(id: number) {
 		try {
 			await api.delete(`issue/${slug}/${id}`);
-			issuesStore.update((issues) => issues.filter((issue) => issue.id !== id));
+			issuesStore.update((issues) => (issues ? issues.filter((issue) => issue.id !== id) : null));
 			toast.success('Successfully deleted task');
 		} catch (err) {
 			console.error('Error deleting task:', err);
@@ -80,7 +85,7 @@ export function useWorkspaceIssues(authToken: string, slug: string) {
 				})
 				.json();
 			issuesStore.update((issues) =>
-				issues.map((i) => (i.id === issue.id ? { ...i, ...response } : i))
+				issues ? issues.map((i) => (i.id === issue.id ? { ...i, ...response } : i)) : null
 			);
 			toast.success('Successfully updated task');
 		} catch (err) {

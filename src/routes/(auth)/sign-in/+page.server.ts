@@ -52,8 +52,6 @@ export const actions = {
 			setCookie(ACCESS_TOKEN, access_token, access_token_expiry, cookies);
 			setCookie(REFRESH_TOKEN, refresh_token, refresh_token_expiry, cookies);
 			setCookie(COGNITO_ID, cognito_id, cognito_id_expiry, cookies);
-
-			throw redirect(307, '/');
 		} catch (error) {
 			if (error instanceof HTTPError) {
 				if (error.response.status === 401) {
@@ -68,5 +66,7 @@ export const actions = {
 			console.error('Unexpected error:', error);
 			return setError(form, 'SERVER: An unexpected error occurred.');
 		}
+
+		throw redirect(307, '/');
 	}
 };
