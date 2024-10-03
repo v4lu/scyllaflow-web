@@ -45,7 +45,7 @@
 			bind:this={modalContent}
 			class={cn(
 				'w-full md:w-fit',
-				'relative rounded-t-3xl border border-border bg-card p-6 md:mb-72 md:rounded-md',
+				'relative rounded-t-3xl border border-border bg-card p-6  md:rounded-md',
 				'shadow-[0_40px_45px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)]',
 				className
 			)}

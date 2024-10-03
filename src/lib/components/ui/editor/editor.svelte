@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Editor, type ChainedCommands } from '@tiptap/core';
+	import { type ChainedCommands, Editor } from '@tiptap/core';
 	import Image from '@tiptap/extension-image';
 	import Placeholder from '@tiptap/extension-placeholder';
 	import Table from '@tiptap/extension-table';
@@ -70,7 +70,7 @@
 
 	onMount(() => {
 		editor = new Editor({
-			element: element,
+			element,
 			extensions: [
 				StarterKit,
 				Table.configure({ resizable: true }),
@@ -79,7 +79,7 @@
 				TableCell,
 				Image,
 				Placeholder.configure({
-					placeholder: placeholder,
+					placeholder,
 					emptyEditorClass: 'is-editor-empty'
 				})
 			],
@@ -190,8 +190,8 @@
 	}
 </script>
 
-<div class="rich-text-editor relative">
-	<div bind:this={element} class="min-h-[200px]"></div>
+<div class="rich-text-editor relative w-full">
+	<div bind:this={element} class="min-h-[200px] w-full"></div>
 	{#if showCommandMenu}
 		<div
 			bind:this={dropdownElement}

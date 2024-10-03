@@ -41,6 +41,21 @@
 		name = '';
 		createProjectOpen = false;
 	}
+
+	$effect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.altKey && event.key === 'n') {
+				event.preventDefault();
+				isCreateIssueModalOpen = true;
+			}
+		};
+
+		window.addEventListener('keydown', handleKeyDown);
+
+		return () => {
+			window.removeEventListener('keydown', handleKeyDown);
+		};
+	});
 </script>
 
 <aside
@@ -92,12 +107,7 @@
 		<article class="">
 			<div class="mb-2 mt-4 flex w-full items-center justify-between">
 				<h2 class="w-full text-xs font-bold text-muted-foreground">Workspace Projects</h2>
-				<Button
-					onclick={() => (createProjectOpen = true)}
-					class="flex w-full justify-start"
-					variant="ghost"
-					size="sm"
-				>
+				<Button onclick={() => (createProjectOpen = true)} class="" variant="ghost" size="icon-xs">
 					<Icon icon="lucide:plus" class="size-3.5" />
 				</Button>
 			</div>

@@ -101,14 +101,17 @@
 			<span class="text-xs font-bold"> Create Issue </span>
 		</div>
 	</article>
-	<article class="my-4 px-6">
+	<article class="my-4 max-h-[236px] overflow-y-auto px-6">
 		<Input bind:value={title} variant="empty" placeholder="What should be done" class="text-xl" />
-		<Editor
-			content={description}
-			update={handleDescriptionUpdate}
-			placeholder="Add a description..."
-		/>
+		<div class="overflow-y-auto">
+			<Editor
+				content={description}
+				update={handleDescriptionUpdate}
+				placeholder="Add a description..."
+			/>
+		</div>
 	</article>
+
 	<article class="flex items-center justify-start gap-2 px-6">
 		<Dropdown
 			triggerClass="px-2 py-1 gap-0 w-fit min-w-fit text-xs font-medium"
