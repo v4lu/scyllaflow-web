@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { cn, getContrastColor } from '$lib';
-	import { IssueRowCard } from '$lib/components/cards';
+	import { IssuePanel, IssueRowCard } from '$lib/components/issue/index.js';
 	import { Icons } from '$lib/components/icons';
 	import { Button } from '$lib/components/ui/button';
 	import { Dropdown } from '$lib/components/ui/dropdown';
@@ -13,7 +13,7 @@
 		tagsStore,
 		useWorkspaceIssues
 	} from '$lib/store/workspace-issues.store';
-	import type { Project, Tag } from '$lib/types/issue.type';
+	import { type Issue, type Project, type Tag } from '$lib/types/issue.type';
 	import Icon from '@iconify/svelte';
 	import { fade } from 'svelte/transition';
 
@@ -31,6 +31,7 @@
 	let filterDropdownOpen = $state(false);
 	let activeSubmenu = $state<'tag' | 'project' | null>(null);
 	let submenuTimeout = $state<number | null>(null);
+	let selectedIssue = $state<Issue | null>(null);
 
 	let sortedStatusKeys = $derived(
 		$groupedIssuesStore
@@ -81,7 +82,7 @@
 </script>
 
 <main>
-	<section class="hi-ft w-full border-b border-border">
+	<section class="h-fit w-full border-b border-border">
 		<div class="flex items-center justify-between px-4 py-2 lg:pr-8">
 			<Dropdown bind:isOpen={filterDropdownOpen} downArrowIcon triggerText="Filter">
 				{#each [{ type: 'tag' as const, icon: 'lucide:tag', text: 'By Tag', items: $tagsStore }, { type: 'project' as const, icon: 'lucide:folder', text: 'By Project', items: $projectsStore }] as menu}
@@ -207,6 +208,7 @@
 								slug={data.slug ?? ''}
 								{deleteIssue}
 								{updateIssue}
+								onSelect={(issue: Issue) => (selectedIssue = issue)}
 							/>
 						{/each}
 					</div>
@@ -215,3 +217,5 @@
 		</div>
 	{/if}
 </main>
+
+<IssuePanel issue={selectedIssue} onClose={() => (selectedIssue = null)} />

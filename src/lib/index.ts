@@ -70,3 +70,39 @@ export function getContrastColor(hexColor: string): string {
 
 	return luminance > 0.5 ? '#000000' : '#FFFFFF';
 }
+
+export function debounce<T extends (...args: never[]) => unknown>(
+	func: T,
+	wait: number
+): (...args: Parameters<T>) => void {
+	let timeout: ReturnType<typeof setTimeout> | null = null;
+
+	return (...args: Parameters<T>): void => {
+		const later = () => {
+			timeout = null;
+			func(...args);
+		};
+
+		if (timeout !== null) {
+			clearTimeout(timeout);
+		}
+		timeout = setTimeout(later, wait);
+	};
+}
+
+export function clickOutside(node: HTMLElement, onClickOutside: () => void) {
+	function handleClick(event: MouseEvent) {
+		if (node && !node.contains(event.target as Node) && !event.defaultPrevented) {
+			event.stopPropagation();
+			onClickOutside();
+		}
+	}
+
+	document.addEventListener('click', handleClick, true);
+
+	return {
+		destroy() {
+			document.removeEventListener('click', handleClick, true);
+		}
+	};
+}

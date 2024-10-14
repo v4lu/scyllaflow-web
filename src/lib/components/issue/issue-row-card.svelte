@@ -17,6 +17,7 @@
 		slug: string;
 		updateIssue: (issue: Issue) => Promise<void>;
 		deleteIssue: (id: number) => Promise<void>;
+		onSelect: (issue: Issue) => void;
 	};
 
 	type MenuType = 'status' | 'priority';
@@ -31,7 +32,7 @@
 		{ type: 'priority', icon: 'solar:flag-bold', text: 'Change Priority', items: priorityOrder }
 	]);
 
-	let { issue, IconPriority, IconStatus, slug, deleteIssue, updateIssue }: Props = $props();
+	let { issue, IconPriority, IconStatus, deleteIssue, updateIssue, onSelect }: Props = $props();
 	let showContextMenu = $state(false);
 	let showDeleteConfirmation = $state(false);
 	let x = $state(0);
@@ -89,6 +90,7 @@
 	role="button"
 	aria-roledescription="extra actions for issue"
 	oncontextmenu={handleContextMenu}
+	onclick={() => onSelect(issue)}
 	class="grid cursor-default grid-cols-[auto_auto_auto_1fr_auto] items-center gap-4 border-b border-border px-4 py-2 lg:px-8"
 >
 	<IconPriority class="size-5" />
@@ -103,7 +105,7 @@
 			issue.status === 'Backlog' && 'text-purple-600 dark:text-purple-400'
 		)}
 	/>
-	<a href={`/workspace/${slug}/issue/${issue.id}`} class="w-fit font-medium">{issue.title}</a>
+	<p class="w-fit font-medium">{issue.title}</p>
 	<div class="flex items-center gap-2">
 		{#if issue.tags && issue.tags.length > 0}
 			<div class="flex gap-1">

@@ -113,10 +113,13 @@
 			</div>
 			<div class="space-y-1">
 				{#if $projectsStore}
-					{#each $projectsStore as { name }}
-						<Button class="w-full justify-start" size="sm" variant="ghost">
+					{#each $projectsStore as { name, id }}
+						<a
+							href={`/workspace/${slug}/project/${id}`}
+							class={cn(buttonVariants({ size: 'sm', variant: 'ghost' }), 'w-full justify-start')}
+						>
 							<span class="max-w-[8rem] truncate">{name}</span>
-						</Button>
+						</a>
 					{/each}
 				{/if}
 			</div>
