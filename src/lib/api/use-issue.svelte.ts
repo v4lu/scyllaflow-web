@@ -12,7 +12,7 @@ class Issue {
 	isSubmittingUpdate = $state(false);
 }
 
-export function useIssue(authToken: string, id: number, slug: string) {
+export function useIssue(authToken: string, id: number | undefined, slug: string, load = true) {
 	const resp = new Issue();
 	const api = authAPI(authToken);
 
@@ -42,19 +42,25 @@ export function useIssue(authToken: string, id: number, slug: string) {
 					json: payload
 				})
 				.json();
+
 			resp.issue = response;
 			toast.success('Issue updated');
+			resp.isSubmittingUpdate = false;
+
+			return response;
 		} catch (error) {
 			const e = error as HTTPError;
 			console.error(e.response);
+
+			resp.isSubmittingUpdate = false;
 		}
-		resp.isSubmittingUpdate = false;
 	}
 
-	loadIssue();
+	if (load) loadIssue();
 
 	return {
 		updateIssue,
-		resp
+		resp,
+		loadIssue
 	};
 }

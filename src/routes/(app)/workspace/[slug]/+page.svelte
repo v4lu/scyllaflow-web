@@ -218,4 +218,11 @@
 	{/if}
 </main>
 
-<IssuePanel issue={selectedIssue} onClose={() => (selectedIssue = null)} />
+{#if data.slug && selectedIssue}
+	<IssuePanel
+		authToken={data.accessToken}
+		bind:issue={selectedIssue}
+		onClose={() => (selectedIssue = null)}
+		slug={data.slug}
+	/>
+{/if}

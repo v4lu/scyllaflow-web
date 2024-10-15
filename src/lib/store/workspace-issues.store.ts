@@ -184,6 +184,15 @@ export function useWorkspaceIssues(authToken: string, slug: string | undefined) 
 		}
 	}
 
+	function updateLocalIssue(updatedIssue: Issue) {
+		issuesStore.update((issues) => {
+			if (!issues) return null;
+			return issues.map((issue) =>
+				issue.id === updatedIssue.id ? { ...issue, ...updatedIssue } : issue
+			);
+		});
+	}
+
 	loadWorkspaceIssues();
 	loadWorkspaceTags();
 	loadWorkspaceProjects(slug!);
@@ -198,7 +207,8 @@ export function useWorkspaceIssues(authToken: string, slug: string | undefined) 
 		loadWorkspaceIssues,
 		createProject,
 		getByProject,
-		loadWorkspaceProjects
+		loadWorkspaceProjects,
+		updateLocalIssue
 	};
 }
 
