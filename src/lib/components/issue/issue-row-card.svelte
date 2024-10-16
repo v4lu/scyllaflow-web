@@ -81,6 +81,37 @@
 			return Icons.priority[item as keyof typeof Icons.priority];
 		}
 	}
+
+	function getStatusColor(status: string): string {
+		switch (status) {
+			case 'InProgress':
+				return 'text-yellow-500 dark:text-yellow-400';
+			case 'Blocked':
+			case 'Cancelled':
+				return 'text-destructive';
+			case 'Done':
+				return 'text-emerald-600 dark:text-emerald-400';
+			case 'Backlog':
+				return 'text-purple-600 dark:text-purple-400';
+			default:
+				return 'text-blue-500 dark:text-blue-400';
+		}
+	}
+
+	function getPriorityColor(priority: string): string {
+		switch (priority) {
+			case 'Urgent':
+				return 'text-red-500 dark:text-red-400';
+			case 'High':
+				return 'text-orange-500 dark:text-orange-400';
+			case 'Medium':
+				return 'text-yellow-500 dark:text-yellow-400';
+			case 'Low':
+				return 'text-green-500 dark:text-green-400';
+			default:
+				return 'text-blue-500 dark:text-blue-400';
+		}
+	}
 </script>
 
 <svelte:window onclick={closeContextMenu} onresize={closeContextMenu} />
@@ -91,20 +122,11 @@
 	aria-roledescription="extra actions for issue"
 	oncontextmenu={handleContextMenu}
 	onclick={() => onSelect(issue)}
-	class="grid cursor-default grid-cols-[auto_auto_auto_1fr_auto] items-center gap-4 border-b border-border px-4 py-2 lg:px-8"
+	class="grid cursor-move grid-cols-[auto_auto_auto_1fr_auto] items-center gap-4 border-b border-border px-4 py-2 lg:px-8"
 >
-	<IconPriority class="size-5" />
+	<IconPriority class={cn('size-5', getPriorityColor(issue.priority))} />
 	<p class="w-20 truncate text-xs text-muted-foreground">{issue.custom_id}</p>
-	<IconStatus
-		class={cn(
-			'size-5',
-			issue.status === 'InProgress' && 'text-yellow-500 dark:text-yellow-400',
-			issue.status === 'Blocked' && 'text-destructive',
-			issue.status === 'Cancelled' && 'text-destructive',
-			issue.status === 'Done' && 'text-emerald-600 dark:text-emerald-400',
-			issue.status === 'Backlog' && 'text-purple-600 dark:text-purple-400'
-		)}
-	/>
+	<IconStatus class={cn('size-5', getStatusColor(issue.status))} />
 	<p class="w-fit font-medium">{issue.title}</p>
 	<div class="flex items-center gap-2">
 		{#if issue.tags && issue.tags.length > 0}
@@ -169,7 +191,12 @@
 							class="flex w-full justify-start rounded-none first:rounded-t-md last:rounded-b-md"
 							size="sm"
 						>
-							<IconComponent class="mr-2 size-4" />
+							<IconComponent
+								class={cn(
+									'mr-2 size-4',
+									menu.type === 'status' ? getStatusColor(item) : getPriorityColor(item)
+								)}
+							/>
 							{item}
 						</Button>
 					{/each}

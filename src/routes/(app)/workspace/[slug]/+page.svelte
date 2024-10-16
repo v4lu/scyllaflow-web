@@ -8,6 +8,7 @@
 		type PriorityIconName,
 		type StatusIconName,
 		groupedIssuesStore,
+		issuesStore,
 		projectsStore,
 		statusOrder,
 		tagsStore,
@@ -32,6 +33,9 @@
 	let activeSubmenu = $state<'tag' | 'project' | null>(null);
 	let submenuTimeout = $state<number | null>(null);
 	let selectedIssue = $state<Issue | null>(null);
+	let draggedIssue = $state<Issue | null>(null);
+	let dragOverStatus = $state<StatusIconName | null>(null);
+	let dragOverIndex = $state<number | null>(null);
 
 	let sortedStatusKeys = $derived(
 		$groupedIssuesStore
@@ -78,6 +82,42 @@
 		name: T extends 'priority' ? PriorityIconName : StatusIconName
 	): (typeof Icons)[T][keyof (typeof Icons)[T]] {
 		return Icons[type][name as keyof (typeof Icons)[T]];
+	}
+
+	function handleDragStart(e: DragEvent, issue: Issue) {
+		draggedIssue = issue;
+		if (e.dataTransfer) {
+			e.dataTransfer.effectAllowed = 'move';
+			e.dataTransfer.setData('text/plain', issue.id.toString());
+		}
+	}
+
+	function handleDragOver(e: DragEvent, status: StatusIconName, index: number) {
+		e.preventDefault();
+		e.stopPropagation();
+		if (e.dataTransfer) {
+			e.dataTransfer.dropEffect = 'move';
+		}
+		dragOverStatus = status;
+		dragOverIndex = index;
+	}
+
+	function handleDragEnd(e: DragEvent) {
+		e.preventDefault();
+		e.stopPropagation();
+		if (draggedIssue && dragOverStatus !== null) {
+			const updatedIssue = { ...draggedIssue, status: dragOverStatus };
+			updateIssue(updatedIssue);
+
+			issuesStore.update((issues) => {
+				if (!issues) return null;
+				return issues.map((issue) => (issue.id === draggedIssue?.id ? updatedIssue : issue));
+			});
+		}
+
+		draggedIssue = null;
+		dragOverStatus = null;
+		dragOverIndex = null;
 	}
 </script>
 
@@ -161,11 +201,18 @@
 				{#each sortedStatusKeys as status}
 					<div class="flex-shrink-0 p-4">
 						<h2 class="sticky top-0 z-10 mb-2 bg-background py-2 text-sm font-medium">
-							{status} ({issueCountsByStatus[status as StatusIconName] || 0})
+							{status} ({issueCountsByStatus[status] || 0})
 						</h2>
-						<div class="flex flex-col gap-2">
-							{#each $groupedIssuesStore[status] || [] as issue}
-								<div class="w-[30rem] rounded-lg border border-border bg-card p-4 shadow-sm">
+						<div {ondragover} ondrop={(e) => handleDragEnd(e)}>
+							{#each $groupedIssuesStore[status] || [] as issue, index (issue.id)}
+								<div
+									draggable="true"
+									ondragstart={(e) => handleDragStart(e, issue)}
+									ondragover={(e) => handleDragOver(e, status, -1)}
+									class="mb-2 w-[30rem] rounded-lg border border-border bg-card p-4 shadow-sm"
+									class:opacity-50={draggedIssue?.id === issue.id}
+									class:border-blue-500={dragOverStatus === status && dragOverIndex === index}
+								>
 									<div class="flex items-center gap-2">
 										<p class="text-xs text-muted-foreground">{issue.custom_id}</p>
 									</div>
@@ -221,7 +268,7 @@
 {#if data.slug && selectedIssue}
 	<IssuePanel
 		authToken={data.accessToken}
-		bind:issue={selectedIssue}
+		issue={selectedIssue}
 		onClose={() => (selectedIssue = null)}
 		slug={data.slug}
 	/>

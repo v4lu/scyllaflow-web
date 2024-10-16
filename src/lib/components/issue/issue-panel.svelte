@@ -2,13 +2,17 @@
 	import type { Issue } from '$lib/types/issue.type';
 	import { Button } from '$lib/components/ui/button';
 	import Icon from '@iconify/svelte';
-	import { clickOutside, formatDateOrDefault, getContrastColor } from '$lib';
-	import { fly } from 'svelte/transition';
-	import { cubicOut } from 'svelte/easing';
+	import { clickOutside, cn, formatDateOrDefault, getContrastColor } from '$lib';
 	import { Editor } from '$lib/components/ui/editor';
 	import { useIssue } from '$lib/api/use-issue.svelte';
 	import { Input } from '../ui/input';
-	import { useWorkspaceIssues } from '$lib/store/workspace-issues.store';
+	import {
+		priorityOrder,
+		statusOrder,
+		useWorkspaceIssues
+	} from '$lib/store/workspace-issues.store';
+	import { Dropdown } from '$lib/components/ui/dropdown';
+	import { Icons } from '$lib/components/icons';
 
 	type Props = {
 		issue: Issue | null;
@@ -17,7 +21,7 @@
 		slug: string;
 	};
 
-	let { issue = $bindable(), onClose, authToken, slug }: Props = $props();
+	let { issue, onClose, authToken, slug }: Props = $props();
 	const { resp, updateIssue, loadIssue } = useIssue(authToken, issue?.id, slug, false);
 	const { updateLocalIssue } = useWorkspaceIssues(authToken, slug);
 
@@ -28,6 +32,8 @@
 	});
 
 	let formattedDueDate = $derived(resp.issue ? formatDateOrDefault(resp.issue.dueDate) : '-');
+	let statusDropdownOpen = $state(false);
+	let priorityDropdownOpen = $state(false);
 
 	function parseDescription(description: string | undefined): object {
 		if (!description) return {};
@@ -63,14 +69,60 @@
 			}
 		}
 	}
+
+	function selectStatus(status: string) {
+		if (resp.issue) {
+			resp.issue.status = status;
+		}
+		statusDropdownOpen = false;
+	}
+
+	function selectPriority(priority: string) {
+		if (resp.issue) {
+			resp.issue.priority = priority;
+		}
+		priorityDropdownOpen = false;
+	}
+
+	function getStatusColor(status: string): string {
+		switch (status) {
+			case 'InProgress':
+				return 'text-yellow-500';
+			case 'Blocked':
+			case 'Cancelled':
+				return 'text-red-500';
+			case 'Done':
+				return 'text-green-500';
+			case 'Backlog':
+				return 'text-purple-500';
+			default:
+				return 'text-blue-500';
+		}
+	}
+
+	function getPriorityColor(priority: string): string {
+		switch (priority) {
+			case 'Urgent':
+				return 'text-red-500';
+			case 'High':
+				return 'text-orange-500';
+			case 'Medium':
+				return 'text-yellow-500';
+			case 'Low':
+				return 'text-green-500';
+			default:
+				return 'text-blue-500';
+		}
+	}
 </script>
 
-{#if issue}
-	<div
-		use:clickOutside={onClose}
-		class="fixed right-0 top-0 z-[10] h-full w-[40rem] overflow-y-auto border-l border-border bg-background shadow-lg"
-		transition:fly={{ x: 400, duration: 300, easing: cubicOut }}
-	>
+<div
+	use:clickOutside={onClose}
+	class="fixed right-0 top-0 z-[10] h-full w-[40rem] overflow-y-auto border-l border-border bg-background shadow-lg transition-transform duration-300 ease-out"
+	class:translate-x-full={!issue}
+	class:translate-x-0={issue}
+>
+	{#if issue}
 		<div class="sticky top-0 border-b border-border bg-background p-3">
 			<div class="flex items-center justify-between">
 				<h2 class="text-xl font-semibold">
@@ -86,9 +138,9 @@
 				<Icon icon="line-md:loading-twotone-loop" class="size-12 text-primary" />
 			</div>
 		{:else}
-			<div class="space-y-4 p-4">
+			<div class="space-y-6 p-6">
 				<div>
-					<p class="mb-1 text-sm text-muted-foreground">Title</p>
+					<p class="mb-2 text-sm font-medium text-muted-foreground">Title</p>
 					<Input
 						oninput={handleTitleChange}
 						variant="empty"
@@ -96,29 +148,71 @@
 						class="text-xl font-medium"
 					/>
 				</div>
-				<div>
-					<p class="text-sm text-muted-foreground">ID</p>
-					<p>{resp.issue.custom_id}</p>
+				<div class="flex items-center justify-between">
+					<div>
+						<p class="mb-2 text-sm font-medium text-muted-foreground">ID</p>
+						<p class="text-sm font-semibold">{resp.issue.custom_id}</p>
+					</div>
+					<div>
+						<p class="mb-2 text-sm font-medium text-muted-foreground">Due Date</p>
+						<p class="text-sm font-semibold">{formattedDueDate}</p>
+					</div>
 				</div>
-				<div>
-					<p class="text-sm text-muted-foreground">Status</p>
-					<p>{resp.issue.status}</p>
-				</div>
-				<div>
-					<p class="text-sm text-muted-foreground">Priority</p>
-					<p>{resp.issue.priority}</p>
-				</div>
-				<div>
-					<p class="text-sm text-muted-foreground">Due Date</p>
-					<p>{formattedDueDate}</p>
+				<div class="flex gap-4">
+					<div class="flex-1">
+						<p class="mb-2 text-sm font-medium text-muted-foreground">Status</p>
+						<Dropdown
+							bind:isOpen={statusDropdownOpen}
+							triggerText={resp.issue.status}
+							downArrowIcon
+							CustomIcon={Icons.status[resp.issue.status]}
+							customIconClass={cn(getStatusColor(resp.issue.status), 'size-5')}
+							triggerIconPosition="left"
+							triggerClass="w-full justify-between"
+						>
+							{#each statusOrder as status}
+								{@const Icon = Icons.status[status]}
+								<button
+									class="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted"
+									onclick={() => selectStatus(status)}
+								>
+									<Icon class={cn('size-4', getStatusColor(status))} />
+									<span>{status}</span>
+								</button>
+							{/each}
+						</Dropdown>
+					</div>
+					<div class="flex-1">
+						<p class="mb-2 text-sm font-medium text-muted-foreground">Priority</p>
+						<Dropdown
+							bind:isOpen={priorityDropdownOpen}
+							triggerText={resp.issue.priority}
+							downArrowIcon
+							CustomIcon={Icons.priority[resp.issue.priority]}
+							customIconClass={cn(getPriorityColor(resp.issue.priority), 'size-5')}
+							triggerIconPosition="left"
+							triggerClass="w-full  justify-between"
+						>
+							{#each priorityOrder as priority}
+								{@const Icon = Icons.priority[priority]}
+								<button
+									class="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted"
+									onclick={() => selectPriority(priority)}
+								>
+									<Icon class={cn('size-4', getPriorityColor(priority))} />
+									<span>{priority}</span>
+								</button>
+							{/each}
+						</Dropdown>
+					</div>
 				</div>
 				{#if resp.issue.tags && resp.issue.tags.length > 0}
 					<div>
-						<p class="mb-1 text-sm text-muted-foreground">Tags</p>
-						<div class="flex flex-wrap gap-1">
+						<p class="mb-2 text-sm font-medium text-muted-foreground">Tags</p>
+						<div class="flex flex-wrap gap-2">
 							{#each resp.issue.tags as tag}
 								<span
-									class="rounded px-2 py-0.5 text-xs"
+									class="rounded-full px-3 py-1 text-xs font-medium"
 									style="background-color: {tag.color}; color: {getContrastColor(tag.color)};"
 								>
 									{tag.name}
@@ -128,7 +222,7 @@
 					</div>
 				{/if}
 				<div>
-					<p class="mb-2 text-sm text-muted-foreground">Description</p>
+					<p class="mb-2 text-sm font-medium text-muted-foreground">Description</p>
 					<Editor
 						content={parseDescription(resp.issue.description)}
 						update={handleDescriptionUpdate}
@@ -139,10 +233,11 @@
 					disabled={resp.isSubmittingUpdate}
 					isLoading={resp.isSubmittingUpdate}
 					onclick={handleUpdateIssue}
+					class="w-full"
 				>
 					Update Issue
 				</Button>
 			</div>
 		{/if}
-	</div>
-{/if}
+	{/if}
+</div>

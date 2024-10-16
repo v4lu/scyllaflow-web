@@ -53,6 +53,7 @@
 		"date-fns": "^4.1.0",
 		"ky": "^1.7.2",
 		"mode-watcher": "^0.4.1",
+		"svelte-dnd-action": "^0.9.51",
 		"tailwind-merge": "^2.5.2"
 	}
 }
