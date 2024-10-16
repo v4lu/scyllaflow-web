@@ -1,12 +1,15 @@
 <script lang="ts">
-	import { cn, getContrastColor } from '$lib';
-	import { IssueHorizontalCard, IssuePanel, IssueRowCard } from '$lib/components/issue/index.js';
-	import { Icons } from '$lib/components/icons';
+	import { getContrastColor } from '$lib';
+	import {
+		IssueColumnContainer,
+		IssueHorizontalCOntainer,
+		IssuePanel
+	} from '$lib/components/issue/index.js';
 	import { Button } from '$lib/components/ui/button';
 	import { Dropdown } from '$lib/components/ui/dropdown';
 	import {
-		type PriorityIconName,
 		type StatusIconName,
+		getIcon,
 		groupedIssuesStore,
 		issuesStore,
 		projectsStore,
@@ -43,12 +46,6 @@
 			: []
 	);
 
-	let issueCountsByStatus = $groupedIssuesStore
-		? (Object.fromEntries(
-				Object.entries($groupedIssuesStore).map(([status, issues]) => [status, issues.length])
-			) as Record<StatusIconName, number>)
-		: ({} as Record<StatusIconName, number>);
-
 	function toggleView() {
 		isHorizontalView = !isHorizontalView;
 	}
@@ -77,13 +74,6 @@
 		}
 	}
 
-	function getIcon<T extends 'priority' | 'status'>(
-		type: T,
-		name: T extends 'priority' ? PriorityIconName : StatusIconName
-	): (typeof Icons)[T][keyof (typeof Icons)[T]] {
-		return Icons[type][name as keyof (typeof Icons)[T]];
-	}
-
 	function handleDragStart(e: DragEvent, issue: Issue) {
 		draggedIssue = issue;
 		originalStatus = issue.status as StatusIconName;
@@ -108,26 +98,18 @@
 		e.stopPropagation();
 		if (draggedIssue && originalStatus !== null) {
 			const newStatus = dragOverStatus || originalStatus;
-
 			// Only update if the status has changed
 			if (newStatus !== originalStatus) {
 				const updatedIssue = { ...draggedIssue, status: newStatus };
 				updateIssue(updatedIssue);
-
 				issuesStore.update((issues) => {
 					if (!issues) return null;
-					return issues.map(
-						(issue) => draggedIssue && (issue.id === draggedIssue.id ? updatedIssue : issue)
+					return issues.map((issue) =>
+						draggedIssue ? (issue.id === draggedIssue.id ? updatedIssue : issue) : issue
 					);
-				});
-			} else {
-				issuesStore.update((issues) => {
-					if (!issues) return null;
-					return [...issues];
 				});
 			}
 		}
-
 		draggedIssue = null;
 		dragOverStatus = null;
 		originalStatus = null;
@@ -215,38 +197,15 @@
 			<div class="flex h-full">
 				{#each sortedStatusKeys as status}
 					{@const IconStatus = getIcon('status', status as StatusIconName)}
-
-					<div class="w-80 flex-shrink-0 p-4">
-						<IconStatus
-							class={cn(
-								'size-5',
-								status === 'InProgress' && 'text-yellow-500 dark:text-yellow-400',
-								status === 'Blocked' && 'text-destructive',
-								status === 'Cancelled' && 'text-destructive',
-								status === 'Done' && 'text-emerald-600 dark:text-emerald-400',
-								status === 'Backlog' && 'text-purple-600 dark:text-purple-400'
-							)}
-						/>
-						<h2 class="sticky top-0 z-10 mb-2 bg-background py-2 text-sm font-medium">
-							{status} ({issueCountsByStatus[status] || 0})
-						</h2>
-						<div
-							role="article"
-							ondragover={(e) => handleDragOver(e, status)}
-							ondrop={(e) => handleDragEnd(e)}
-						>
-							{#each $groupedIssuesStore[status] || [] as issue (issue.id)}
-								<IssueHorizontalCard
-									IconPriority={getIcon('priority', issue.priority)}
-									IconStatus={getIcon('status', issue.status)}
-									{issue}
-									{draggedIssue}
-									{handleDragEnd}
-									{handleDragStart}
-								/>
-							{/each}
-						</div>
-					</div>
+					<IssueHorizontalCOntainer
+						{IconStatus}
+						{status}
+						{draggedIssue}
+						{handleDragEnd}
+						{handleDragStart}
+						{handleDragOver}
+						issuesCount={0}
+					/>
 				{/each}
 			</div>
 		</div>
@@ -254,45 +213,19 @@
 		<div class="h-[calc(100dvh-120px)] overflow-y-auto">
 			{#each sortedStatusKeys as status}
 				{@const IconStatus = getIcon('status', status as StatusIconName)}
-				<section class="w-full">
-					<div
-						class="sticky top-0 z-10 flex h-fit w-full items-center justify-start gap-4 bg-card px-4 py-2 lg:px-8"
-					>
-						<IconStatus
-							class={cn(
-								'size-5',
-								status === 'InProgress' && 'text-yellow-500 dark:text-yellow-400',
-								status === 'Blocked' && 'text-destructive',
-								status === 'Cancelled' && 'text-destructive',
-								status === 'Done' && 'text-emerald-600 dark:text-emerald-400',
-								status === 'Backlog' && 'text-purple-600 dark:text-purple-400'
-							)}
-						/>
-						<h2 class="text-xs font-medium">
-							{status} ({issueCountsByStatus[status as StatusIconName] || 0})
-						</h2>
-					</div>
-					<div
-						role="article"
-						ondragover={(e) => handleDragOver(e, status)}
-						ondrop={(e) => handleDragEnd(e)}
-					>
-						{#each $groupedIssuesStore[status] || [] as issue}
-							<IssueRowCard
-								IconPriority={getIcon('priority', issue.priority)}
-								IconStatus={getIcon('status', issue.status)}
-								{issue}
-								slug={data.slug ?? ''}
-								{deleteIssue}
-								{updateIssue}
-								onSelect={(issue: Issue) => (selectedIssue = issue)}
-								{draggedIssue}
-								{handleDragEnd}
-								{handleDragStart}
-							/>
-						{/each}
-					</div>
-				</section>
+				<IssueColumnContainer
+					{IconStatus}
+					{status}
+					{deleteIssue}
+					slug={data.slug ?? ''}
+					{updateIssue}
+					onSelect={(issue: Issue) => (selectedIssue = issue)}
+					{draggedIssue}
+					{handleDragEnd}
+					{handleDragStart}
+					{handleDragOver}
+					issuesCount={0}
+				/>
 			{/each}
 		</div>
 	{/if}

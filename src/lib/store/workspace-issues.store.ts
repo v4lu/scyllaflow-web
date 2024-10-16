@@ -1,5 +1,5 @@
 import { authAPI } from '$lib/api';
-import type { Icons } from '$lib/components/icons';
+import { Icons } from '$lib/components/icons';
 import type {
 	CreateIssue,
 	CreateProject,
@@ -225,4 +225,11 @@ export const priorityOrder: PriorityIconName[] = ['Low', 'Medium', 'High', 'Urge
 
 export function getStatusOrder(status: StatusIconName): number {
 	return statusOrder.indexOf(status);
+}
+
+export function getIcon<T extends 'priority' | 'status'>(
+	type: T,
+	name: T extends 'priority' ? PriorityIconName : StatusIconName
+): (typeof Icons)[T][keyof (typeof Icons)[T]] {
+	return Icons[type][name as keyof (typeof Icons)[T]];
 }
