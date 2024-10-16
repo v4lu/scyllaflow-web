@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { CreateWorkspace } from '$lib/components/forms';
 	import { Button } from '$lib/components/ui/button/index.js';
+	import { User } from '$lib/types/user.type.js';
 
 	let { data } = $props();
 

@@ -18,6 +18,9 @@
 		updateIssue: (issue: Issue) => Promise<void>;
 		deleteIssue: (id: number) => Promise<void>;
 		onSelect: (issue: Issue) => void;
+		handleDragStart: (e: DragEvent, issue: Issue) => void;
+		handleDragEnd: (e: DragEvent) => void;
+		draggedIssue: Issue | null;
 	};
 
 	type MenuType = 'status' | 'priority';
@@ -32,7 +35,17 @@
 		{ type: 'priority', icon: 'solar:flag-bold', text: 'Change Priority', items: priorityOrder }
 	]);
 
-	let { issue, IconPriority, IconStatus, deleteIssue, updateIssue, onSelect }: Props = $props();
+	let {
+		issue,
+		IconPriority,
+		IconStatus,
+		deleteIssue,
+		updateIssue,
+		onSelect,
+		draggedIssue,
+		handleDragEnd,
+		handleDragStart
+	}: Props = $props();
 	let showContextMenu = $state(false);
 	let showDeleteConfirmation = $state(false);
 	let x = $state(0);
@@ -119,10 +132,15 @@
 <div
 	tabindex="0"
 	role="button"
+	onkeydown={() => {}}
 	aria-roledescription="extra actions for issue"
 	oncontextmenu={handleContextMenu}
 	onclick={() => onSelect(issue)}
+	draggable="true"
+	ondragstart={(e) => handleDragStart(e, issue)}
+	ondragend={handleDragEnd}
 	class="grid cursor-move grid-cols-[auto_auto_auto_1fr_auto] items-center gap-4 border-b border-border px-4 py-2 lg:px-8"
+	class:opacity-50={draggedIssue?.id === issue.id}
 >
 	<IconPriority class={cn('size-5', getPriorityColor(issue.priority))} />
 	<p class="w-20 truncate text-xs text-muted-foreground">{issue.custom_id}</p>

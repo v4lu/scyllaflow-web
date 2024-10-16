@@ -5,6 +5,7 @@
 	import { fade } from 'svelte/transition';
 	import '../app.css';
 	import { Toast } from '../lib/components/ui/toast';
+	import type { User } from '$lib/types/user.type';
 	let { children } = $props();
 </script>
 

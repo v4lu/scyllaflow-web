@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { cn, getContrastColor } from '$lib';
-	import { IssuePanel, IssueRowCard } from '$lib/components/issue/index.js';
+	import { IssueHorizontalCard, IssuePanel, IssueRowCard } from '$lib/components/issue/index.js';
 	import { Icons } from '$lib/components/icons';
 	import { Button } from '$lib/components/ui/button';
 	import { Dropdown } from '$lib/components/ui/dropdown';
@@ -35,7 +35,7 @@
 	let selectedIssue = $state<Issue | null>(null);
 	let draggedIssue = $state<Issue | null>(null);
 	let dragOverStatus = $state<StatusIconName | null>(null);
-	let dragOverIndex = $state<number | null>(null);
+	let originalStatus = $state<StatusIconName | null>(null);
 
 	let sortedStatusKeys = $derived(
 		$groupedIssuesStore
@@ -86,38 +86,52 @@
 
 	function handleDragStart(e: DragEvent, issue: Issue) {
 		draggedIssue = issue;
+		originalStatus = issue.status as StatusIconName;
 		if (e.dataTransfer) {
 			e.dataTransfer.effectAllowed = 'move';
 			e.dataTransfer.setData('text/plain', issue.id.toString());
 		}
+		document.body.classList.add('dragging');
 	}
 
-	function handleDragOver(e: DragEvent, status: StatusIconName, index: number) {
+	function handleDragOver(e: DragEvent, status: StatusIconName) {
 		e.preventDefault();
 		e.stopPropagation();
 		if (e.dataTransfer) {
 			e.dataTransfer.dropEffect = 'move';
 		}
 		dragOverStatus = status;
-		dragOverIndex = index;
 	}
 
 	function handleDragEnd(e: DragEvent) {
 		e.preventDefault();
 		e.stopPropagation();
-		if (draggedIssue && dragOverStatus !== null) {
-			const updatedIssue = { ...draggedIssue, status: dragOverStatus };
-			updateIssue(updatedIssue);
+		if (draggedIssue && originalStatus !== null) {
+			const newStatus = dragOverStatus || originalStatus;
 
-			issuesStore.update((issues) => {
-				if (!issues) return null;
-				return issues.map((issue) => (issue.id === draggedIssue?.id ? updatedIssue : issue));
-			});
+			// Only update if the status has changed
+			if (newStatus !== originalStatus) {
+				const updatedIssue = { ...draggedIssue, status: newStatus };
+				updateIssue(updatedIssue);
+
+				issuesStore.update((issues) => {
+					if (!issues) return null;
+					return issues.map(
+						(issue) => draggedIssue && (issue.id === draggedIssue.id ? updatedIssue : issue)
+					);
+				});
+			} else {
+				issuesStore.update((issues) => {
+					if (!issues) return null;
+					return [...issues];
+				});
+			}
 		}
 
 		draggedIssue = null;
 		dragOverStatus = null;
-		dragOverIndex = null;
+		originalStatus = null;
+		document.body.classList.remove('dragging');
 	}
 </script>
 
@@ -142,6 +156,7 @@
 						</Button>
 						{#if activeSubmenu === menu.type}
 							<div
+								role="article"
 								class="absolute left-full top-0 ml-1 w-40 rounded-md border border-border bg-card shadow-md"
 								transition:fade={{ duration: 300 }}
 								onmouseenter={() => handleSubmenuInteraction(menu.type, true)}
@@ -199,25 +214,36 @@
 		<div class="h-[calc(100dvh-120px)] w-[calc(100vw-260px)] overflow-x-auto overflow-y-auto">
 			<div class="flex h-full">
 				{#each sortedStatusKeys as status}
-					<div class="flex-shrink-0 p-4">
+					{@const IconStatus = getIcon('status', status as StatusIconName)}
+
+					<div class="w-80 flex-shrink-0 p-4">
+						<IconStatus
+							class={cn(
+								'size-5',
+								status === 'InProgress' && 'text-yellow-500 dark:text-yellow-400',
+								status === 'Blocked' && 'text-destructive',
+								status === 'Cancelled' && 'text-destructive',
+								status === 'Done' && 'text-emerald-600 dark:text-emerald-400',
+								status === 'Backlog' && 'text-purple-600 dark:text-purple-400'
+							)}
+						/>
 						<h2 class="sticky top-0 z-10 mb-2 bg-background py-2 text-sm font-medium">
 							{status} ({issueCountsByStatus[status] || 0})
 						</h2>
-						<div {ondragover} ondrop={(e) => handleDragEnd(e)}>
-							{#each $groupedIssuesStore[status] || [] as issue, index (issue.id)}
-								<div
-									draggable="true"
-									ondragstart={(e) => handleDragStart(e, issue)}
-									ondragover={(e) => handleDragOver(e, status, -1)}
-									class="mb-2 w-[30rem] rounded-lg border border-border bg-card p-4 shadow-sm"
-									class:opacity-50={draggedIssue?.id === issue.id}
-									class:border-blue-500={dragOverStatus === status && dragOverIndex === index}
-								>
-									<div class="flex items-center gap-2">
-										<p class="text-xs text-muted-foreground">{issue.custom_id}</p>
-									</div>
-									<p class="font-medium">{issue.title}</p>
-								</div>
+						<div
+							role="article"
+							ondragover={(e) => handleDragOver(e, status)}
+							ondrop={(e) => handleDragEnd(e)}
+						>
+							{#each $groupedIssuesStore[status] || [] as issue (issue.id)}
+								<IssueHorizontalCard
+									IconPriority={getIcon('priority', issue.priority)}
+									IconStatus={getIcon('status', issue.status)}
+									{issue}
+									{draggedIssue}
+									{handleDragEnd}
+									{handleDragStart}
+								/>
 							{/each}
 						</div>
 					</div>
@@ -246,7 +272,11 @@
 							{status} ({issueCountsByStatus[status as StatusIconName] || 0})
 						</h2>
 					</div>
-					<div>
+					<div
+						role="article"
+						ondragover={(e) => handleDragOver(e, status)}
+						ondrop={(e) => handleDragEnd(e)}
+					>
 						{#each $groupedIssuesStore[status] || [] as issue}
 							<IssueRowCard
 								IconPriority={getIcon('priority', issue.priority)}
@@ -256,6 +286,9 @@
 								{deleteIssue}
 								{updateIssue}
 								onSelect={(issue: Issue) => (selectedIssue = issue)}
+								{draggedIssue}
+								{handleDragEnd}
+								{handleDragStart}
 							/>
 						{/each}
 					</div>
