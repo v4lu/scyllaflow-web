@@ -6,4 +6,5 @@ export type User = {
 	profile_picture?: string | null;
 	username: string;
 	verified: boolean;
+	role: string;
 };

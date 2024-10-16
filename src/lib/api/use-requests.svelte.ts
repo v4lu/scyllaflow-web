@@ -3,7 +3,7 @@ import { toast } from '$lib/store/toast.store';
 import type { RequestType } from '$lib/types/request.type';
 
 class Request {
-	isSubbmitingInvite = $state(false);
+	isSubmittingInvite = $state(false);
 	isLoading = $state(false);
 	requests = $state<RequestType[]>([]);
 }
@@ -13,7 +13,7 @@ export function useRequest(authToken: string) {
 	const api = authAPI(authToken);
 
 	async function inviteUser(username: string, slug: string) {
-		resp.isSubbmitingInvite = true;
+		resp.isSubmittingInvite = true;
 		try {
 			const response = await api
 				.post(`request/${slug}`, {
@@ -25,7 +25,7 @@ export function useRequest(authToken: string) {
 			console.error('Error creating workspace:', err);
 			toast.error('Failed to create workspace. Please try again.');
 		}
-		resp.isSubbmitingInvite = false;
+		resp.isSubmittingInvite = false;
 	}
 
 	async function loadRequests() {

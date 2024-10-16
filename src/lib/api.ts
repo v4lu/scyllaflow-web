@@ -37,6 +37,12 @@ export function createAuthHeaders(token: string): Headers {
 	});
 }
 
+export function catchErr<T>(promise: Promise<T>): Promise<[T | null, Error | null]> {
+	return promise
+		.then((data): [T, null] => [data, null])
+		.catch((err): [null, Error] => [null, err instanceof Error ? err : new Error(String(err))]);
+}
+
 export async function refreshToken(refresh: string, cognitoId: string): Promise<RefreshResponse> {
 	try {
 		const res = await ky

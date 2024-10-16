@@ -18,7 +18,8 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
 		const workspace = await api.get<Workspace>(`workspace/${params.slug}`).json();
 
 		return {
-			workspace
+			workspace,
+			slug: params.slug
 		};
 	} catch (e) {
 		const err = e as HTTPError;
