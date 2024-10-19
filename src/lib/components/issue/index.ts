@@ -3,3 +3,5 @@ export { default as IssuePanel } from './issue-panel.svelte';
 export { default as IssueHorizontalCard } from './issue-horizontal-card.svelte';
 export { default as IssueColumnContainer } from './issue-column-container.svelte';
 export { default as IssueHorizontalCOntainer } from './issue-horizontal-container.svelte';
+export { default as SubIssuePanelCard } from './sub-issue-panel-card.svelte';
+export { default as CommentPanel } from './comment-panel.svelte';

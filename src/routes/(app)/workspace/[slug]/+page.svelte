@@ -240,8 +240,9 @@
 		}
 	}}
 >
-	{#if data.slug && selectedIssue}
+	{#if data.slug && selectedIssue && data.workspace}
 		<IssuePanel
+			workspace={data.workspace}
 			authToken={data.accessToken}
 			issue={selectedIssue}
 			onClose={() => (selectedIssue = null)}

@@ -2,7 +2,14 @@
 	import type { Issue } from '$lib/types/issue.type';
 	import { Button } from '$lib/components/ui/button';
 	import Icon from '@iconify/svelte';
-	import { cn, formatDateOrDefault, getContrastColor, monthAndDay } from '$lib';
+	import {
+		cn,
+		formatDateOrDefault,
+		getContrastColor,
+		monthAndDay,
+		getStatusColor,
+		getPriorityColor
+	} from '$lib';
 	import { Editor } from '$lib/components/ui/editor';
 	import { useIssue } from '$lib/api/use-issue.svelte';
 	import { Input, inputVariants } from '../ui/input';
@@ -15,16 +22,25 @@
 	import { Icons } from '$lib/components/icons';
 	import { DatePicker } from '$lib/components/ui/date-picker';
 	import { Badge } from '../ui/badge';
+	import { CreateSubIssue } from '../forms';
+	import type { Workspace } from '$lib/types/workspace.type';
+	import { SubIssuePanelCard, CommentPanel } from '.';
 
 	type Props = {
 		issue: Issue | null;
 		onClose: () => void;
 		authToken: string;
 		slug: string;
+		workspace: Workspace;
 	};
 
-	let { issue, onClose, authToken, slug }: Props = $props();
-	const { resp, updateIssue, loadIssue } = useIssue(authToken, issue?.id, slug, false);
+	let { issue, onClose, authToken, slug, workspace }: Props = $props();
+	const { resp, updateIssue, loadIssue, createSubIssue, loadComments, commentIssue } = useIssue(
+		authToken,
+		issue?.id,
+		slug,
+		false
+	);
 	const { updateLocalIssue } = useWorkspaceIssues(authToken, slug);
 
 	let updateInterval: number;
@@ -32,7 +48,8 @@
 	$effect(() => {
 		if (issue) {
 			loadIssue();
-			// Set up auto-update interval
+			loadComments();
+
 			updateInterval = window.setInterval(async () => {
 				if (resp.issue && !resp.isSubmittingUpdate) {
 					const res = await updateIssue(resp.issue);
@@ -53,6 +70,8 @@
 	let statusDropdownOpen = $state(false);
 	let priorityDropdownOpen = $state(false);
 	let isDatePickerOpen = $state(false);
+	let isSubIssueFormOpen = $state(false);
+	let commentContent = $state('');
 
 	function parseDescription(description: string | undefined): object {
 		if (!description) return {};
@@ -94,49 +113,25 @@
 		priorityDropdownOpen = false;
 	}
 
-	function getStatusColor(status: string): string {
-		switch (status) {
-			case 'InProgress':
-				return 'text-yellow-500';
-			case 'Blocked':
-			case 'Cancelled':
-				return 'text-red-500';
-			case 'Done':
-				return 'text-green-500';
-			case 'Backlog':
-				return 'text-purple-500';
-			default:
-				return 'text-blue-500';
-		}
-	}
-
-	function getPriorityColor(priority: string): string {
-		switch (priority) {
-			case 'Urgent':
-				return 'text-red-500';
-			case 'High':
-				return 'text-orange-500';
-			case 'Medium':
-				return 'text-yellow-500';
-			case 'Low':
-				return 'text-green-500';
-			default:
-				return 'text-blue-500';
-		}
-	}
-
 	function handleDateSelect(date: Date | null) {
 		if (resp.issue && date) {
 			resp.issue.dueDate = date.toISOString();
 			isDatePickerOpen = false;
 		}
 	}
+
+	async function handleSubmitComment() {
+		if (!commentContent.trim()) return;
+
+		await commentIssue(commentContent);
+		commentContent = '';
+	}
 </script>
 
 {#if issue}
 	<div class="overflow-y-auto">
 		<div
-			class="sticky top-0 z-10 border-b border-border bg-background/95 p-4 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+			class="sticky top-0 z-10 border-b border-border bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/60"
 		>
 			<div class="flex items-center justify-between">
 				<div class="flex items-center justify-center gap-4">
@@ -154,7 +149,7 @@
 		</div>
 
 		{#if !resp.issue || resp.isLoading}
-			<div class="flex flex-1 items-center justify-center">
+			<div class="flex h-[90dvh] flex-1 items-center justify-center">
 				<Icon icon="line-md:loading-twotone-loop" class="size-12 animate-spin text-primary" />
 			</div>
 		{:else}
@@ -271,48 +266,50 @@
 			</div>
 			<div class="border-t border-border">
 				<div class="space-y-8 p-6">
-					<!-- Subtasks Section -->
 					<div class="space-y-4">
 						<div class="flex items-center justify-between">
 							<h3 class="text-sm font-medium text-muted-foreground">Subtasks</h3>
-							<Button variant="outline" size="sm" class="h-8">
+							<Button
+								onclick={() => (isSubIssueFormOpen = true)}
+								variant="outline"
+								size="sm"
+								class="h-8"
+							>
 								<Icon icon="lucide:plus" class="mr-2 size-4" />
 								Add Subtask
 							</Button>
 						</div>
-						<div class="space-y-2">
-							{#each [1, 2] as _}
-								<div class="flex items-start space-x-2 rounded-lg border bg-card p-3">
-									<input type="checkbox" class="mt-1" />
-									<div class="flex-1 space-y-1">
-										<Input
-											placeholder="Enter subtask title..."
-											class="h-auto border-0 bg-transparent p-0 text-sm focus-visible:ring-0"
-										/>
-										<div class="flex items-center gap-2 text-xs text-muted-foreground">
-											<span>{formatDateOrDefault('2024-03-20')}</span>
-											<span>•</span>
-											<span class="text-yellow-500">In Progress</span>
-										</div>
-									</div>
-								</div>
-							{/each}
+						<div class="space-y-3">
+							{#if resp.subIssues && resp.subIssues.length > 0}
+								{#each resp.subIssues as subIssue}
+									{@const Icon = Icons.status[subIssue.status]}
+									<SubIssuePanelCard {Icon} {subIssue} />
+								{/each}
+							{:else}
+								<p class="text-sm text-muted-foreground">No subtasks yet.</p>
+							{/if}
 						</div>
 					</div>
 				</div>
 			</div>
 
-			<div class="space-y-4 px-6 py-4">
+			<div class="space-y-4 px-6 py-4 pb-8">
 				<h3 class="text-sm font-medium text-muted-foreground">Comments</h3>
 
-				<!-- Comment Input -->
-				<div class="space-y-3 rounded-lg border bg-card p-3">
+				<div class="space-y-4">
+					{#each resp.comments as comment}
+						<CommentPanel {comment} />
+					{/each}
+				</div>
+
+				<div class="space-y-3 rounded-lg border border-border bg-card p-3 shadow-lg">
 					<div class="flex gap-3">
 						<div class="flex size-8 items-center justify-center rounded-full bg-primary/10">
 							<Icon icon="lucide:user" class="size-4 text-primary" />
 						</div>
 						<textarea
 							rows="3"
+							bind:value={commentContent}
 							placeholder="Write a comment..."
 							class={cn(
 								inputVariants({ variant: 'empty' }),
@@ -321,32 +318,27 @@
 						></textarea>
 					</div>
 					<div class="flex justify-end">
-						<Button size="sm">
+						<Button
+							onclick={handleSubmitComment}
+							disabled={!commentContent.trim() || resp.isCreatingComment}
+							isLoading={resp.isCreatingComment}
+							size="sm"
+						>
 							<Icon icon="lucide:send" class="mr-2 size-4" />
 							Send
 						</Button>
 					</div>
 				</div>
 			</div>
-
-			<div class="space-y-4 px-6 pb-12 pt-4">
-				{#each [1, 2] as _}
-					<div class="flex gap-3">
-						<div class="flex size-8 items-center justify-center rounded-full bg-primary/10">
-							<Icon icon="lucide:user" class="size-4 text-primary" />
-						</div>
-						<div class="flex-1 space-y-1">
-							<div class="flex items-center gap-2">
-								<span class="font-medium">User Name</span>
-								<span class="text-xs text-muted-foreground">
-									{formatDateOrDefault('2024-03-20')}
-								</span>
-							</div>
-							<p class="text-sm">This is an example comment message.</p>
-						</div>
-					</div>
-				{/each}
-			</div>
 		{/if}
 	</div>
 {/if}
+
+<CreateSubIssue
+	isCreatingIssue={resp.isCreatingSubIssue}
+	{workspace}
+	bind:isOpen={isSubIssueFormOpen}
+	{authToken}
+	createIssue={createSubIssue}
+	onClose={() => (isSubIssueFormOpen = false)}
+/>

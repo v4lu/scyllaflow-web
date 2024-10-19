@@ -122,3 +122,34 @@ export function clickOutsideTimeout(node: HTMLElement, onClickOutside: () => voi
 		}
 	};
 }
+
+export function getStatusColor(status: string): string {
+	switch (status) {
+		case 'InProgress':
+			return 'text-yellow-500';
+		case 'Blocked':
+		case 'Cancelled':
+			return 'text-red-500';
+		case 'Done':
+			return 'text-green-500';
+		case 'Backlog':
+			return 'text-purple-500';
+		default:
+			return 'text-blue-500';
+	}
+}
+
+export function getPriorityColor(priority: string): string {
+	switch (priority) {
+		case 'Urgent':
+			return 'text-red-500';
+		case 'High':
+			return 'text-orange-500';
+		case 'Medium':
+			return 'text-yellow-500';
+		case 'Low':
+			return 'text-green-500';
+		default:
+			return 'text-blue-500';
+	}
+}

@@ -3,6 +3,7 @@ import { type IconProps, Icons } from '../icons';
 
 export { default as CreateIssue } from './create-issuse.svelte';
 export { default as CreateWorkspace } from './create-workspace.svelte';
+export { default as CreateSubIssue } from './create-sub-issue.svelte';
 
 type IconsType = typeof Icons;
 export type PriorityIconName = keyof IconsType['priority'];

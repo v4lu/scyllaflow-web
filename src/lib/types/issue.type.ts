@@ -1,3 +1,5 @@
+import type { User } from './user.type';
+
 export type Issue = {
 	id: number;
 	custom_id: string;
@@ -53,4 +55,27 @@ export type Project = {
 	color?: string;
 	description?: string;
 	createdAt: string;
+};
+
+export type SubIssueRequest = {
+	assigned_user_ids?: number[];
+	description?: string;
+	dueDate: Date | null;
+	priority: string;
+	status: string;
+	tag_ids?: number[];
+	title: string;
+};
+
+export type Comment = {
+	content: string;
+	created_at: string;
+	issue_id: number;
+	id: number;
+	created_by: number;
+};
+
+export type CommentResponse = {
+	comment: Comment;
+	user: User;
 };
