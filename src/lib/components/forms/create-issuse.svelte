@@ -18,6 +18,7 @@
 	import { Input } from '../ui/input';
 	import { Modal } from '../ui/modal';
 	import { Badge } from '../ui/badge';
+	import Toggle from '../ui/toggle/toggle.svelte';
 
 	type Props = {
 		isOpen: boolean;
@@ -27,6 +28,7 @@
 	};
 
 	let { isOpen = $bindable(), onClose, workspace, authToken }: Props = $props();
+	let createMore = $state(false);
 
 	let isPriorityDropdownOpen = $state(false);
 	let selectedPriority = $state<PriorityArrType>(priorityArr[0]);
@@ -90,7 +92,10 @@
 		selectedProject = undefined;
 		selectedTags = [];
 		selectedDate = null;
-		isOpen = false;
+
+		if (!createMore) {
+			isOpen = false;
+		}
 	}
 </script>
 
@@ -262,11 +267,17 @@
 		<Button size="icon" variant="ghost">
 			<Icon icon="lucide:paperclip" class="size-5" />
 		</Button>
-		<Button
-			isLoading={$isSubmittingCreateIssueStore}
-			disabled={$isSubmittingCreateIssueStore}
-			onclick={handleCreateWorkspace}
-			size="sm">Create Issue</Button
-		>
+
+		<div class="flex items-center justify-center gap-3">
+			<Toggle isActive={createMore} toggle={() => (createMore = !createMore)} />
+			<Button
+				isLoading={$isSubmittingCreateIssueStore}
+				disabled={$isSubmittingCreateIssueStore}
+				onclick={handleCreateWorkspace}
+				size="sm"
+			>
+				Create Issue
+			</Button>
+		</div>
 	</article>
 </Modal>
