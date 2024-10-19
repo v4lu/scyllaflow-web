@@ -1,19 +1,23 @@
-import type { User } from '$lib/types/user.type';
+import type { UserResponse } from '$lib/types/user.type';
 import { writable } from 'svelte/store';
 
 type UserStore = {
-	subscribe: (this: void, run: (value: User) => void, invalidate?: () => void) => () => void;
-	setUser: (user: User) => void;
-	updateUser: (partialUser: Partial<User>) => void;
+	subscribe: (
+		this: void,
+		run: (value: UserResponse) => void,
+		invalidate?: () => void
+	) => () => void;
+	setUser: (user: UserResponse) => void;
+	updateUser: (partialUser: Partial<UserResponse>) => void;
 };
 
 function createSessionStore(): UserStore {
-	const { subscribe, set, update } = writable<User>();
+	const { subscribe, set, update } = writable<UserResponse>();
 
 	return {
 		subscribe,
-		setUser: (user: User) => set(user),
-		updateUser: (partialUser: Partial<User>): void => {
+		setUser: (user: UserResponse) => set(user),
+		updateUser: (partialUser: Partial<UserResponse>): void => {
 			update((user) => {
 				if (user) {
 					return { ...user, ...partialUser };

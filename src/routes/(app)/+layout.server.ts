@@ -1,6 +1,6 @@
 import { authAPI } from '$lib/api';
 import { ACCESS_TOKEN } from '$lib/constants';
-import type { User } from '$lib/types/user.type';
+import type { UserResponse } from '$lib/types/user.type';
 import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 
@@ -13,7 +13,7 @@ export const load: LayoutServerLoad = async ({ cookies, params }) => {
 
 	const api = authAPI(accessToken);
 
-	const user = await api.get<User>('user').json();
+	const user = await api.get<UserResponse>('user').json();
 
 	return {
 		user,

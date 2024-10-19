@@ -7,7 +7,6 @@
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { MemberSmCard } from '$lib/components/home';
 	import Icon from '@iconify/svelte';
-	import { Field } from '$lib/components/ui/field';
 
 	let { data } = $props();
 	let username = $state('');

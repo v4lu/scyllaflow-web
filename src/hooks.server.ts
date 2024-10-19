@@ -6,16 +6,22 @@ import type { Handle } from '@sveltejs/kit';
 export const handle: Handle = async ({ event, resolve }) => {
 	const access = event.cookies.get(ACCESS_TOKEN);
 	const refresh = event.cookies.get(REFRESH_TOKEN);
-	const cognitoId = event.cookies.get(COGNITO_ID);
 
-	if (!access && refresh && cognitoId) {
+	if (!access && refresh) {
 		try {
-			const refreshedTokens = await refreshToken(refresh, cognitoId);
+			const refreshedTokens = await refreshToken(refresh);
 
 			setCookie(
 				ACCESS_TOKEN,
 				refreshedTokens.access_token,
 				refreshedTokens.access_token_expiry,
+				event.cookies
+			);
+
+			setCookie(
+				REFRESH_TOKEN,
+				refreshedTokens.refresh_token,
+				refreshedTokens.refresh_token_expiry,
 				event.cookies
 			);
 

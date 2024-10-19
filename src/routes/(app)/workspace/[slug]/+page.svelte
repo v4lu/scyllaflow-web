@@ -7,6 +7,7 @@
 	} from '$lib/components/issue/index.js';
 	import { Button } from '$lib/components/ui/button';
 	import { Dropdown } from '$lib/components/ui/dropdown';
+	import { RightPanelWrapper } from '$lib/components/ui/panel';
 	import {
 		type StatusIconName,
 		getIcon,
@@ -231,11 +232,20 @@
 	{/if}
 </main>
 
-{#if data.slug && selectedIssue}
-	<IssuePanel
-		authToken={data.accessToken}
-		issue={selectedIssue}
-		onClose={() => (selectedIssue = null)}
-		slug={data.slug}
-	/>
-{/if}
+<RightPanelWrapper
+	isOpen={!!selectedIssue}
+	onClose={() => {
+		if (selectedIssue) {
+			selectedIssue = null;
+		}
+	}}
+>
+	{#if data.slug && selectedIssue}
+		<IssuePanel
+			authToken={data.accessToken}
+			issue={selectedIssue}
+			onClose={() => (selectedIssue = null)}
+			slug={data.slug}
+		/>
+	{/if}
+</RightPanelWrapper>

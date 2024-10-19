@@ -1,14 +1,17 @@
 <script lang="ts">
 	import {
+		addDays,
 		addMonths,
 		eachDayOfInterval,
 		endOfMonth,
 		format,
+		getDay,
 		isBefore,
 		isSameDay,
 		isSameMonth,
 		startOfDay,
 		startOfMonth,
+		subDays,
 		subMonths
 	} from 'date-fns';
 
@@ -29,12 +32,13 @@
 		currentMonth = subMonths(currentMonth, 1);
 	}
 
-	let days = $derived(
-		eachDayOfInterval({
-			start: startOfMonth(currentMonth),
-			end: endOfMonth(currentMonth)
-		})
-	);
+	const start = $derived(startOfMonth(currentMonth));
+	const end = $derived(endOfMonth(currentMonth));
+	const startDay = $derived(getDay(start));
+	const paddingDays = $derived(startDay === 0 ? 6 : startDay - 1);
+	const paddingStart = $derived(subDays(start, paddingDays));
+	const paddingEnd = $derived(addDays(end, 42 - (paddingDays + end.getDate())));
+	let calendarDays = $derived(eachDayOfInterval({ start: paddingStart, end: paddingEnd }));
 
 	function handleDateClick(day: Date) {
 		if (selected && isSameDay(day, selected)) {
@@ -52,19 +56,18 @@
 		<button onclick={nextMonth}>&gt;</button>
 	</div>
 	<div class="grid grid-cols-7 gap-1">
-		{#each ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as day}
+		{#each ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as day}
 			<div class="text-center text-sm font-bold">{day}</div>
 		{/each}
-		{#each days as day}
+		{#each calendarDays as day}
 			<button
 				class="p-2 text-center
-                    {isSameMonth(day, currentMonth) ? '' : 'text-muted-foreground'} 
-                    {isBefore(day, today) ? 'text-muted-foreground' : ''}
-                    {selected && isSameDay(day, selected)
+        {isSameMonth(day, currentMonth) ? '' : 'text-muted-foreground'}
+        {isBefore(day, today) ? 'text-muted-foreground/50' : ''}
+        {selected && isSameDay(day, selected)
 					? 'rounded-md bg-primary text-primary-foreground'
 					: ''}"
 				onclick={() => handleDateClick(day)}
-				disabled={!isSameMonth(day, currentMonth)}
 			>
 				{format(day, 'd')}
 			</button>

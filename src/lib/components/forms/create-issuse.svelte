@@ -17,6 +17,8 @@
 	import { Editor } from '../ui/editor';
 	import { Input } from '../ui/input';
 	import { Modal } from '../ui/modal';
+	import { Badge } from '../ui/badge';
+
 	type Props = {
 		isOpen: boolean;
 		onClose: () => void;
@@ -95,9 +97,9 @@
 <Modal class="grid gap-2 p-0 md:min-w-[40rem]" bind:isOpen {onClose}>
 	<article class="flex w-full items-center justify-between px-6 pt-6">
 		<div class="flex items-center justify-center gap-2">
-			<span class="rounded-md border border-border bg-accent px-1 py-0.5 text-xs">
+			<Badge>
 				{workspace.customId}
-			</span>
+			</Badge>
 			<span class="text-xs font-bold"> Create Issue </span>
 		</div>
 	</article>

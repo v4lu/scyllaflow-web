@@ -1,5 +1,4 @@
 import { authAPI } from '$lib/api';
-import { toast } from '$lib/store/toast.store';
 import type { Issue as IssueType, UpdateIssuseRequest } from '$lib/types/issue.type';
 import type { HTTPError } from 'ky';
 
@@ -44,7 +43,6 @@ export function useIssue(authToken: string, id: number | undefined, slug: string
 				.json();
 
 			resp.issue = response;
-			toast.success('Issue updated');
 			resp.isSubmittingUpdate = false;
 
 			return response;

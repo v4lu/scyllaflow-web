@@ -14,6 +14,8 @@ export const api = ky.create({
 type RefreshResponse = {
 	access_token: string;
 	access_token_expiry: string;
+	refresh_token: string;
+	refresh_token_expiry: string;
 };
 
 export function authAPI(authToken: string): KyInstance {
@@ -43,13 +45,11 @@ export function catchErr<T>(promise: Promise<T>): Promise<[T | null, Error | nul
 		.catch((err): [null, Error] => [null, err instanceof Error ? err : new Error(String(err))]);
 }
 
-export async function refreshToken(refresh: string, cognitoId: string): Promise<RefreshResponse> {
+export async function refreshToken(refresh: string): Promise<RefreshResponse> {
 	try {
 		const res = await ky
-			.post<RefreshResponse>(`${getBaseUrl()}/auth/refresh?id=${cognitoId}`, {
-				headers: {
-					'Refresh-Token': refresh
-				}
+			.post<RefreshResponse>(`${getBaseUrl()}/auth/refresh`, {
+				json: { refresh_token: refresh }
 			})
 			.json();
 		return res;
